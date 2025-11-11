@@ -1,11 +1,17 @@
+// src/store/logStore.ts
+
 import create from 'zustand';
 import { LogEntry, LogFilters } from '@/types';
 import { getInitialFilters, generateDemoLogs } from '@/utils/logUtils';
 import { fetchHistoricalLogs } from '@/api/logService';
 import { PAGE_SIZE, MAX_LOG_COUNT } from '@/constants/logConstants';
 
-// (Define the LogState interface here as shown in the previous answer)
+/**
+ * Defines the complete shape of our application's state,
+ * including both the data and the actions that can modify it.
+ */
 interface LogState {
+  // --- STATE ---
   logs: LogEntry[];
   filters: LogFilters;
   viewMode: 'STREAM' | 'HISTORY';
@@ -16,8 +22,8 @@ interface LogState {
   page: number;
   totalLogsCount: number;
   selectedLog: LogEntry | null;
-  
-  // Actions
+
+  // --- ACTIONS ---
   setFilters: (filters: LogFilters) => void;
   setSearchText: (text: string) => void;
   setViewMode: (mode: 'STREAM' | 'HISTORY', clearLogs?: boolean) => void;
@@ -26,71 +32,101 @@ interface LogState {
   setSelectedLog: (log: LogEntry | null) => void;
   setConnectionStatus: (status: { isConnected: boolean; error?: string | null }) => void;
   
-  // Async Actions
+  // --- ASYNC ACTIONS ---
   loadHistory: (page?: number) => Promise<void>;
 }
 
-
+/**
+ * Creates the Zustand store.
+ * The `create` function takes a "creator" function that receives `set` and `get` as arguments.
+ * - `set`: A function to update the state.
+ * - `get`: A function to read the current state (useful for actions that depend on existing state).
+ */
 export const useLogStore = create<LogState>((set, get) => ({
-    logs: generateDemoLogs(),
-    filters: getInitialFilters(),
-    viewMode: 'STREAM',
-    isPaused: false,
-    isConnected: false,
-    isLoading: false,
-    connectionError: null,
-    page: 1,
-    totalLogsCount: 0,
-    selectedLog: null,
-  
-    setFilters: (filters) => set({ filters, page: 1 }), // Reset page on filter change
-    setSearchText: (text) => set(state => ({ filters: { ...state.filters, searchText: text } })),
-    togglePause: () => set(state => ({ isPaused: !state.isPaused })),
-    setSelectedLog: (log) => set(state => ({ 
-      selectedLog: state.selectedLog?.id === log?.id ? null : log 
-    })),
-    setConnectionStatus: ({ isConnected, error = null }) => set({ isConnected, connectionError: error }),
-  
-    addLog: (log) => set(state => {
-      if (state.isPaused || state.viewMode === 'HISTORY') return {};
-      const newLogs = [log, ...state.logs];
-      return { logs: newLogs.slice(0, MAX_LOG_COUNT) };
-    }),
+  // --- INITIAL STATE ---
+  logs: generateDemoLogs(), // Start with demo logs for an immediate UI.
+  filters: getInitialFilters(),
+  viewMode: 'STREAM',
+  isPaused: false,
+  isConnected: false,
+  isLoading: false,
+  connectionError: null,
+  page: 1,
+  totalLogsCount: 0,
+  selectedLog: null,
 
-    setViewMode: (mode, clearLogs = false) => {
-        set({ 
-            viewMode: mode,
-            page: 1,
-            selectedLog: null,
-            filters: getInitialFilters(), // Reset filters on mode change
-            logs: clearLogs ? [] : generateDemoLogs(),
-        });
-        // After setting mode, trigger a data load
-        if (mode === 'STREAM') {
-            get().loadHistory(1); // Load initial buffer for stream
-        }
-    },
+  // --- ACTION IMPLEMENTATIONS ---
   
-    loadHistory: async (newPage) => {
-        const { filters, viewMode } = get();
-        const targetPage = newPage ?? 1;
-        
-        set({ isLoading: true, connectionError: null, selectedLog: null });
-        
-        try {
-          const offset = (targetPage - 1) * PAGE_SIZE;
-          // In stream mode, we fetch a buffer, not a "page"
-          const limit = viewMode === 'STREAM' ? PAGE_SIZE : PAGE_SIZE; 
-          const data = await fetchHistoricalLogs(offset, limit, filters);
-          set({ 
-            logs: data.logs, 
-            totalLogsCount: data.total, 
-            page: targetPage,
-            isLoading: false 
-          });
-        } catch (error) {
-            console.error(error);
-          set({ connectionError: 'Failed to fetch historical logs.', isLoading: false });
-        }
-    },
+  setFilters: (filters) => set({ filters, page: 1 }), // Reset to page 1 whenever filters change.
+  
+  setSearchText: (text) => set(state => ({ 
+    filters: { ...state.filters, searchText: text } 
+  })),
+  
+  togglePause: () => set(state => ({ isPaused: !state.isPaused })),
+
+  setSelectedLog: (log) => set(state => ({ 
+    // If the same log is selected again, deselect it (toggle behavior).
+    selectedLog: state.selectedLog?.id === log?.id ? null : log 
+  })),
+
+  setConnectionStatus: ({ isConnected, error = null }) => set({ 
+    isConnected, 
+    connectionError: isConnected ? null : error 
+  }),
+
+  addLog: (log) => set(state => {
+    // Prevent new logs from being added if paused or in history mode.
+    if (state.isPaused || state.viewMode === 'HISTORY') {
+      return {}; // Return empty object to not change state.
+    }
+    const newLogs = [log, ...state.logs];
+    // Enforce the max log count to prevent memory issues.
+    return { logs: newLogs.slice(0, MAX_LOG_COUNT) };
+  }),
+
+  setViewMode: (mode, clearLogs = false) => {
+    set({ 
+      viewMode: mode,
+      page: 1,
+      selectedLog: null,
+      filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
+      logs: clearLogs ? [] : generateDemoLogs(),
+    });
+    // After setting the mode, trigger a data load for that mode.
+    // We call the async action defined below.
+    get().loadHistory(1);
+  },
+
+  // --- ASYNC ACTION IMPLEMENTATION ---
+  
+  loadHistory: async (newPage) => {
+    const { filters, viewMode } = get();
+    const targetPage = newPage ?? 1;
+    
+    set({ isLoading: true, connectionError: null, selectedLog: null });
+    
+    try {
+      const offset = (targetPage - 1) * PAGE_SIZE;
+      // In STREAM mode, we are fetching an initial buffer, not a "page".
+      const limit = PAGE_SIZE; 
+      const data = await fetchHistoricalLogs(offset, limit, filters);
+
+      set({ 
+        logs: data.logs, 
+        totalLogsCount: data.total, 
+        page: targetPage,
+        isLoading: false,
+      });
+    } catch (error: any) {
+      console.error("Failed to load historical logs:", error);
+      // Use a generic, translated error message for the UI.
+      // The actual error is logged to the console for developers.
+      set({ 
+        connectionError: 'restError', // Use the key for i18n
+        isLoading: false,
+        logs: [], // Clear logs on error
+      });
+    }
+  },
 }));

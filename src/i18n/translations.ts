@@ -1,5 +1,12 @@
-// ... 多语言翻译数据 (Translation Data)  ...
-export const translations = {
+// src/i18n/translations.ts
+
+import { Language } from "@/types";
+
+/**
+ * A dictionary of all translation strings, organized by language.
+ * Using a typed record ensures that each language key is valid.
+ */
+export const translations: Record<Language, Record<string, string>> = {
   zh: {
     appTitle: 'SOVD 远程诊断日志仪表盘',
     filter: '过滤器',
@@ -47,8 +54,8 @@ export const translations = {
     maxStorage: '最大存储量',
     historyResults: '历史查询结果:',
     unit: '条',
-    pageOf: '页 / 共',
-    perPage: '页 (每页',
+    pageOf: '页',
+    perPage: '每页',
     streamEmptyMessage: '实时流已暂停或没有匹配的日志。',
     historyEmptyMessage: '没有找到匹配的历史日志。',
     appStatus: '应用状态:',
@@ -103,9 +110,9 @@ export const translations = {
     totalStreamBuffer: 'Total stream buffer:',
     maxStorage: 'Max storage:',
     historyResults: 'History results:',
-    unit: '',
-    pageOf: 'Page / Of',
-    perPage: 'Pages (per',
+    unit: 'logs',
+    pageOf: 'Page',
+    perPage: 'per page',
     streamEmptyMessage: 'Stream paused or no matching logs found.',
     historyEmptyMessage: 'No matching historical logs found.',
     appStatus: 'Application Status:',
@@ -161,8 +168,8 @@ export const translations = {
     maxStorage: '最大ストレージ:',
     historyResults: '履歴検索結果:',
     unit: '件',
-    pageOf: 'ページ / 全',
-    perPage: 'ページ (1ページあたり',
+    pageOf: 'ページ',
+    perPage: 'ページあたり',
     streamEmptyMessage: 'ストリームが一時停止しているか、一致するログが見つかりません。',
     historyEmptyMessage: '一致する履歴ログが見つかりません。',
     appStatus: 'アプリケーションステータス:',
