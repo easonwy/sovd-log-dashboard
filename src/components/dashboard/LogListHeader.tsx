@@ -5,6 +5,7 @@ import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { MAX_LOG_COUNT, PAGE_SIZE } from '@/constants/logConstants';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { shallow } from 'zustand/shallow';
 
 interface LogListHeaderProps {
   filteredLogCount: number;
@@ -26,7 +27,7 @@ export const LogListHeader = ({ filteredLogCount }: LogListHeaderProps) => {
     page: state.page,
     loadHistory: state.loadHistory,
     isLoading: state.isLoading
-  }));
+  }), shallow);
 
   const maxPage = Math.ceil(totalLogsCount / PAGE_SIZE);
 

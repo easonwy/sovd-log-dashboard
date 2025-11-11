@@ -5,11 +5,14 @@ import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { TimeBin } from '@/types';
 import { Clock } from 'lucide-react';
+import { shallow } from 'zustand/shallow';
 
 export const TimeHistogram = () => {
   const { t, language } = useI18n();
-  const logs = useLogStore(state => state.logs);
-  const viewMode = useLogStore(state => state.viewMode);
+  const { logs, viewMode } = useLogStore(state => ({
+    logs: state.logs,
+    viewMode: state.viewMode
+  }), shallow);
 
   const { bins, maxCount } = useMemo(() => {
     if (viewMode !== 'STREAM') return { bins: [], maxCount: 0 };

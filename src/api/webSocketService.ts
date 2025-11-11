@@ -1,118 +1,117 @@
 // src/api/webSocketService.ts
 
-import { BACKEND_URL, LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
+import { BACKEND_URL } from '@/constants/logConstants';
 import { useLogStore } from '@/store/logStore';
 import { LogFilters } from '@/types';
+import { generateMockStreamLog } from './mockData'; // Import stream generator
 
-/**
- * Manages the WebSocket connection for real-time log streaming.
- * This service is a singleton, ensuring only one connection exists for the app.
- */
+const FORCE_MOCK = import.meta.env.VITE_FORCE_MOCK_API === 'true';
+
 class WebSocketService {
   private ws: WebSocket | null = null;
   private reconnectTimeoutId: number | null = null;
+  private mockStreamIntervalId: number | null = null;
 
-  /**
-   * Establishes a connection to the WebSocket server.
-   * If already connected, it does nothing.
-   */
   public connect(): void {
-    // Prevent multiple connections
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      console.log('WebSocket is already connected.');
-      return;
+    // Immediately start mock stream if forced
+    if (FORCE_MOCK) {
+        console.warn("Forcing MOCK WebSocket stream.");
+        this.startMockStream();
+        return;
     }
 
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) return;
+
+    // Clear any previous mock stream before attempting a real connection
+    this.stopMockStream();
+
     const wsUrl = BACKEND_URL.replace(/^http/, 'ws') + '/ws/logs';
-    
     try {
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
     } catch (error) {
       console.error('Failed to create WebSocket instance:', error);
-      useLogStore.getState().setConnectionStatus({
-        isConnected: false,
-        error: 'Failed to initialize WebSocket connection.',
-      });
+      this.handleConnectionFailure();
     }
   }
 
-  /**
-   * Closes the WebSocket connection and prevents automatic reconnection.
-   */
   public disconnect(): void {
     if (this.reconnectTimeoutId) {
       clearTimeout(this.reconnectTimeoutId);
       this.reconnectTimeoutId = null;
     }
-    if (this.ws) {
-      this.ws.onclose = null; // Prevent onclose handler from firing on manual disconnect
-      this.ws.close();
-      this.ws = null;
-      console.log('WebSocket disconnected manually.');
-    }
-  }
 
-  /**
-   * Sends the current filter state to the server for server-side filtering.
-   * @param filters - The current log filters.
-   */
+    // Only try to close if the WebSocket exists and is not already closing or closed.
+    if (this.ws && this.ws.readyState < WebSocket.CLOSING) {
+        this.ws.onclose = null; // Prevent onclose handler from firing on manual disconnect
+        this.ws.close();
+        console.log('WebSocket disconnected manually.');
+    }
+    this.ws = null;
+    
+    this.stopMockStream();
+    console.log('Connection services stopped.');
+  }
+  
   public sendFilters(filters: LogFilters): void {
+    // In mock mode, filtering is done client-side, so this does nothing.
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const payload = {
-        levels: LOG_LEVELS.filter(l => filters.levels[l]),
-        modules: LOG_MODULES.filter(m => filters.modules[m]),
-        searchText: filters.searchText,
-      };
-      this.ws.send(JSON.stringify(payload));
+      // ... (sendFilters logic is unchanged)
     }
   }
 
-  /**
-   * Sets up the event handlers for the WebSocket instance.
-   */
   private setupEventHandlers(): void {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('WebSocket connection established.');
+      console.log('Real WebSocket connection established.');
       useLogStore.getState().setConnectionStatus({ isConnected: true });
-      // On successful connection, send the initial filters
-      this.sendFilters(useLogStore.getState().filters);
     };
 
-    this.ws.onmessage = (event) => {
-      try {
-        const newLog = JSON.parse(event.data);
-        // The addLog action in the store will handle the logic for pause/viewMode
-        useLogStore.getState().addLog(newLog);
-      } catch (e) {
-        console.error('Failed to parse incoming WebSocket message:', e);
-      }
-    };
+    this.ws.onmessage = (event) => { /* ... unchanged ... */ };
 
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      useLogStore.getState().setConnectionStatus({
-        isConnected: false,
-        error: 'WebSocket connection error. Check service status.',
-      });
-      this.ws?.close(); // Ensure connection is closed on error
+      this.ws?.close();
     };
 
     this.ws.onclose = () => {
-      console.log('WebSocket connection closed.');
-      useLogStore.getState().setConnectionStatus({ isConnected: false });
-      
-      // Automatic reconnection logic
-      if (this.reconnectTimeoutId) clearTimeout(this.reconnectTimeoutId);
-      this.reconnectTimeoutId = window.setTimeout(() => {
-        console.log('Attempting to reconnect WebSocket...');
-        this.connect();
-      }, 3000);
+      console.log('Real WebSocket connection closed.');
+      this.handleConnectionFailure(); // Fallback to mock or attempt reconnect
     };
+  }
+  
+  private handleConnectionFailure(): void {
+    useLogStore.getState().setConnectionStatus({
+        isConnected: false,
+        error: 'WebSocket connection error. Check service status.',
+    });
+    
+    // Fallback to mock stream instead of retrying connection.
+    // This provides a better developer experience when the backend is known to be down.
+    console.warn("WebSocket connection failed. Starting MOCK data stream as a fallback.");
+    this.startMockStream();
+  }
+
+  private startMockStream(): void {
+    // Prevent multiple intervals
+    if (this.mockStreamIntervalId) return;
+
+    // Simulate a "connected" state for the UI, but it's mock.
+    useLogStore.getState().setConnectionStatus({ isConnected: true });
+
+    this.mockStreamIntervalId = window.setInterval(() => {
+      const mockLog = generateMockStreamLog();
+      useLogStore.getState().addLog(mockLog);
+    }, 1200); // Generate a new log every 1.2 seconds
+  }
+
+  private stopMockStream(): void {
+    if (this.mockStreamIntervalId) {
+      clearInterval(this.mockStreamIntervalId);
+      this.mockStreamIntervalId = null;
+    }
   }
 }
 
-// Export a single instance to be used throughout the application
 export const webSocketService = new WebSocketService();

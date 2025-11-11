@@ -1,6 +1,6 @@
 // src/hooks/useLogStream.ts
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { webSocketService } from '@/api/webSocketService';
 
@@ -18,22 +18,35 @@ export const useLogStream = () => {
     filters: state.filters,
   }));
 
+  // Use a ref to track if initialization has already run.
+  const initialized = useRef(false);
+
   /**
    * Effect for initializing and cleaning up the data connection.
    * This runs only once when the component using the hook mounts.
    */
   useEffect(() => {
-    // 1. Fetch the initial set of logs to populate the view.
-    // In STREAM mode, this is the initial buffer. In HISTORY, it's the first page.
-    useLogStore.getState().loadHistory(1);
-    
-    // 2. Establish the WebSocket connection.
-    webSocketService.connect();
+
+    // Only run initialization logic ONCE.
+    if (!initialized.current) {
+      initialized.current = true; // Mark as initialized
+
+      console.log('Initializing log stream and connection...');
+      
+      // 1. Fetch the initial set of logs.
+      useLogStore.getState().loadHistory(1);
+      
+      // 2. Establish the WebSocket connection.
+      webSocketService.connect();
+    }
 
     // 3. Return a cleanup function that runs when the component unmounts.
     // This is crucial to prevent memory leaks and unnecessary background connections.
     return () => {
-      webSocketService.disconnect();
+      if (initialized.current) {
+         // If you want it to disconnect only when the page is truly closed,
+         // you can handle this differently. For now, this is safer.
+      }
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount.
 
@@ -48,4 +61,15 @@ export const useLogStream = () => {
       webSocketService.sendFilters(filters);
     }
   }, [filters, viewMode]); // Dependencies: re-run this effect if filters or viewMode change.
+  
+  /**
+   * Effect for loading history when view mode changes.
+   * This runs whenever the view mode changes.
+   */
+  useEffect(() => {
+    // Only load history if we're in HISTORY mode
+    if (viewMode === 'HISTORY') {
+      useLogStore.getState().loadHistory(1);
+    }
+  }, [viewMode]);
 };

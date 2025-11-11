@@ -7,6 +7,7 @@ import { LogEntry } from '@/types';
  * It attempts to read from environment variables, falling back to a default for local development.
  * Make sure to create a `.env.local` file with `VITE_BACKEND_URL=http://your-backend-url`.
  */
+// If backend is not running or accessible, this will cause connection failures
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 /**

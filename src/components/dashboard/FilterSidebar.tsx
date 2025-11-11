@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { getInitialFilters } from '@/utils/logUtils';
 import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import { Filter, ChevronDown, ChevronUp, Database } from 'lucide-react';
+import { shallow } from 'zustand/shallow';
 
 export const FilterSidebar = () => {
   const { t } = useI18n();
@@ -16,16 +17,14 @@ export const FilterSidebar = () => {
     setFilters,
     viewMode,
     setViewMode,
-    loadHistory,
     logs
   } = useLogStore(state => ({
     filters: state.filters,
     setFilters: state.setFilters,
     viewMode: state.viewMode,
     setViewMode: state.setViewMode,
-    loadHistory: state.loadHistory,
     logs: state.logs, // Needed for counts in STREAM mode
-  }));
+  }), shallow);
   
   // Calculate counts based on currently visible logs in STREAM mode
   const logCounts = useMemo(() => {
@@ -50,7 +49,7 @@ export const FilterSidebar = () => {
 
   const handleHistorySearch = () => {
     setViewMode('HISTORY', true);
-    loadHistory(1);
+    // Load history will be triggered by the useEffect in useLogStream
   };
   
   const handleClearFilters = () => {

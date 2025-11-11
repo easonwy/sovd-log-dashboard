@@ -1,6 +1,6 @@
 // src/store/logStore.ts
 
-import create from 'zustand';
+import { create } from 'zustand'
 import { LogEntry, LogFilters } from '@/types';
 import { getInitialFilters, generateDemoLogs } from '@/utils/logUtils';
 import { fetchHistoricalLogs } from '@/api/logService';
@@ -85,23 +85,18 @@ export const useLogStore = create<LogState>((set, get) => ({
     return { logs: newLogs.slice(0, MAX_LOG_COUNT) };
   }),
 
-  setViewMode: (mode, clearLogs = false) => {
-    set({ 
-      viewMode: mode,
-      page: 1,
-      selectedLog: null,
-      filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
-      logs: clearLogs ? [] : generateDemoLogs(),
-    });
-    // After setting the mode, trigger a data load for that mode.
-    // We call the async action defined below.
-    get().loadHistory(1);
-  },
+  setViewMode: (mode, clearLogs = false) => set({ 
+    viewMode: mode,
+    page: 1,
+    selectedLog: null,
+    filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
+    logs: clearLogs ? [] : generateDemoLogs(),
+  }),
 
   // --- ASYNC ACTION IMPLEMENTATION ---
   
   loadHistory: async (newPage) => {
-    const { filters, viewMode } = get();
+    const { filters } = get();
     const targetPage = newPage ?? 1;
     
     set({ isLoading: true, connectionError: null, selectedLog: null });

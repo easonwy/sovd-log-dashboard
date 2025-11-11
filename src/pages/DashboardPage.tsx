@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useLogStream } from '@/hooks/useLogStream';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
+import { shallow } from 'zustand/shallow';
 
 // Layout Components
 import { PageWrapper } from '@/components/layout/PageWrapper';
@@ -46,7 +47,7 @@ export const DashboardPage = () => {
     setSelectedLog: state.setSelectedLog,
     isLoading: state.isLoading,
     connectionError: state.connectionError,
-  }));
+  }), shallow);
   
   /**
    * Memoized calculation for client-side filtering.

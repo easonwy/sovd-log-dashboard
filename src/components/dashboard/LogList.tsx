@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { LogEntry } from '@/types';
 import { List } from 'lucide-react';
 import LogItem from './LogItem'; // Using default export
+import { shallow } from 'zustand/shallow';
 
 interface LogListProps {
   filteredLogs: LogEntry[];
@@ -25,7 +26,7 @@ export const LogList = ({ filteredLogs }: LogListProps) => {
     isPaused: state.isPaused,
     viewMode: state.viewMode,
     isLoading: state.isLoading,
-  }));
+  }), shallow);
   
   const logListRef = useRef<HTMLDivElement>(null);
 

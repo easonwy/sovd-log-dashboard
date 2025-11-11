@@ -13,6 +13,7 @@ import {
   Pause,
   Wifi,
 } from 'lucide-react';
+import { shallow } from 'zustand/shallow';
 
 // The Header needs a prop to toggle the stats panel visibility
 interface HeaderProps {
@@ -42,7 +43,7 @@ export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
     togglePause: state.togglePause,
     isConnected: state.isConnected,
     loadHistory: state.loadHistory,
-  }));
+  }), shallow);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
@@ -50,12 +51,12 @@ export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
 
   const switchToHistoryMode = () => {
     setViewMode('HISTORY', true); // Switch mode and clear logs
-    loadHistory(1);
+    // Load history will be triggered by the useEffect in useLogStream
   };
 
   const switchToStreamMode = () => {
     setViewMode('STREAM'); // Switch mode and load initial buffer
-    loadHistory(1);
+    // Load history will be triggered by the useEffect in useLogStream
   };
 
   const toggleLanguage = () => {
