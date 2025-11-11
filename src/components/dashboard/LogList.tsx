@@ -6,27 +6,25 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { LogEntry } from '@/types';
 import { List } from 'lucide-react';
 import LogItem from './LogItem'; // Using default export
-import { shallow } from 'zustand/shallow';
 
 interface LogListProps {
   filteredLogs: LogEntry[];
 }
 
+// Memoized selectors to avoid infinite loops
+const selectSelectedLog = (state: any) => state.selectedLog;
+const selectSetSelectedLog = (state: any) => state.setSelectedLog;
+const selectIsPaused = (state: any) => state.isPaused;
+const selectViewMode = (state: any) => state.viewMode;
+const selectIsLoading = (state: any) => state.isLoading;
+
 export const LogList = ({ filteredLogs }: LogListProps) => {
   const { t } = useI18n();
-  const {
-    selectedLog,
-    setSelectedLog,
-    isPaused,
-    viewMode,
-    isLoading
-  } = useLogStore(state => ({
-    selectedLog: state.selectedLog,
-    setSelectedLog: state.setSelectedLog,
-    isPaused: state.isPaused,
-    viewMode: state.viewMode,
-    isLoading: state.isLoading,
-  }), shallow);
+  const selectedLog = useLogStore(selectSelectedLog);
+  const setSelectedLog = useLogStore(selectSetSelectedLog);
+  const isPaused = useLogStore(selectIsPaused);
+  const viewMode = useLogStore(selectViewMode);
+  const isLoading = useLogStore(selectIsLoading);
   
   const logListRef = useRef<HTMLDivElement>(null);
 

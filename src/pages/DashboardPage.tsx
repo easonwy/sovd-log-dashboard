@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useLogStream } from '@/hooks/useLogStream';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
-import { shallow } from 'zustand/shallow';
+import { LogEntry, LogFilters } from '@/types';
 
 // Layout Components
 import { PageWrapper } from '@/components/layout/PageWrapper';
@@ -20,6 +20,15 @@ import { StatsPanel } from '@/components/dashboard/StatsPanel';
 import { TimeHistogram } from '@/components/dashboard/TimeHistogram';
 import { AlertTriangle } from 'lucide-react';
 
+// Memoized selectors to avoid infinite loops
+const selectLogs = (state: { logs: LogEntry[] }) => state.logs;
+const selectFilters = (state: { filters: LogFilters }) => state.filters;
+const selectViewMode = (state: { viewMode: 'STREAM' | 'HISTORY' }) => state.viewMode;
+const selectSelectedLog = (state: { selectedLog: LogEntry | null }) => state.selectedLog;
+const selectSetSelectedLog = (state: { setSelectedLog: (log: LogEntry | null) => void }) => state.setSelectedLog;
+const selectIsLoading = (state: { isLoading: boolean }) => state.isLoading;
+const selectConnectionError = (state: { connectionError: string | null }) => state.connectionError;
+
 export const DashboardPage = () => {
   const { t } = useI18n();
 
@@ -29,25 +38,15 @@ export const DashboardPage = () => {
   // UI-specific state that doesn't need to be global.
   const [isStatsVisible, setIsStatsVisible] = useState(true);
 
-  // Select all necessary state from the Zustand store.
-  // Using a single selector is often more performant than multiple individual ones.
-  const {
-    logs,
-    filters,
-    viewMode,
-    selectedLog,
-    setSelectedLog,
-    isLoading,
-    connectionError,
-  } = useLogStore(state => ({
-    logs: state.logs,
-    filters: state.filters,
-    viewMode: state.viewMode,
-    selectedLog: state.selectedLog,
-    setSelectedLog: state.setSelectedLog,
-    isLoading: state.isLoading,
-    connectionError: state.connectionError,
-  }), shallow);
+  // Select state from the Zustand store using stable selectors.
+  // Each selector is defined outside the component to avoid recreation.
+  const logs = useLogStore(selectLogs);
+  const filters = useLogStore(selectFilters);
+  const viewMode = useLogStore(selectViewMode);
+  const selectedLog = useLogStore(selectSelectedLog);
+  const setSelectedLog = useLogStore(selectSetSelectedLog);
+  const isLoading = useLogStore(selectIsLoading);
+  const connectionError = useLogStore(selectConnectionError);
   
   /**
    * Memoized calculation for client-side filtering.
@@ -63,7 +62,7 @@ export const DashboardPage = () => {
     const { levels, modules, searchText } = filters;
     const lowerCaseSearch = searchText.toLowerCase();
 
-    return logs.filter(log => {
+    return logs.filter((log: LogEntry) => {
       const levelMatch = levels[log.level];
       const moduleMatch = modules[log.module];
       const searchMatch = !searchText || 

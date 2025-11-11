@@ -13,7 +13,6 @@ import {
   Pause,
   Wifi,
 } from 'lucide-react';
-import { shallow } from 'zustand/shallow';
 
 // The Header needs a prop to toggle the stats panel visibility
 interface HeaderProps {
@@ -21,29 +20,26 @@ interface HeaderProps {
   onToggleStats: () => void;
 }
 
+// Memoized selectors to avoid infinite loops
+const selectFilters = (state: any) => state.filters;
+const selectSetSearchText = (state: any) => state.setSearchText;
+const selectViewMode = (state: any) => state.viewMode;
+const selectSetViewMode = (state: any) => state.setViewMode;
+const selectIsPaused = (state: any) => state.isPaused;
+const selectTogglePause = (state: any) => state.togglePause;
+const selectIsConnected = (state: any) => state.isConnected;
+
 export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
   const { t, language, setLanguage } = useI18n();
 
-  // Select multiple state values and actions from the Zustand store
-  const {
-    filters,
-    setSearchText,
-    viewMode,
-    setViewMode,
-    isPaused,
-    togglePause,
-    isConnected,
-    loadHistory,
-  } = useLogStore(state => ({
-    filters: state.filters,
-    setSearchText: state.setSearchText,
-    viewMode: state.viewMode,
-    setViewMode: state.setViewMode,
-    isPaused: state.isPaused,
-    togglePause: state.togglePause,
-    isConnected: state.isConnected,
-    loadHistory: state.loadHistory,
-  }), shallow);
+  // Select individual state values and actions from the Zustand store
+  const filters = useLogStore(selectFilters);
+  const setSearchText = useLogStore(selectSetSearchText);
+  const viewMode = useLogStore(selectViewMode);
+  const setViewMode = useLogStore(selectSetViewMode);
+  const isPaused = useLogStore(selectIsPaused);
+  const togglePause = useLogStore(selectTogglePause);
+  const isConnected = useLogStore(selectIsConnected);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
@@ -60,11 +56,8 @@ export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
   };
 
   const toggleLanguage = () => {
-    setLanguage(lang => {
-      if (lang === 'zh') return 'en';
-      if (lang === 'en') return 'ja';
-      return 'zh';
-    });
+    const nextLang = language === 'zh' ? 'en' : language === 'en' ? 'ja' : 'zh';
+    setLanguage(nextLang);
   };
 
   const getNextLangCode = () => {

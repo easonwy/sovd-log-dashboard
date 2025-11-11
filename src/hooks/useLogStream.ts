@@ -1,6 +1,6 @@
 // src/hooks/useLogStream.ts
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { webSocketService } from '@/api/webSocketService';
 
@@ -11,12 +11,10 @@ import { webSocketService } from '@/api/webSocketService';
  * and manage side effects that update the global Zustand store.
  */
 export const useLogStream = () => {
-  // Select the necessary state from the store to use as dependencies for effects.
-  // Using a selector function ensures the component only re-renders when these specific values change.
-  const { viewMode, filters } = useLogStore(state => ({
-    viewMode: state.viewMode,
-    filters: state.filters,
-  }));
+  // Use stable selectors to avoid infinite loops with useSyncExternalStore
+  // Each selector should be created only once and cached
+  const viewMode = useLogStore(useCallback(state => state.viewMode, []));
+  const filters = useLogStore(useCallback(state => state.filters, []));
 
   // Use a ref to track if initialization has already run.
   const initialized = useRef(false);

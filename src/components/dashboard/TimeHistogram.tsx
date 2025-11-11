@@ -5,14 +5,15 @@ import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { TimeBin } from '@/types';
 import { Clock } from 'lucide-react';
-import { shallow } from 'zustand/shallow';
+
+// Memoized selectors to avoid infinite loops
+const selectLogs = (state: any) => state.logs;
+const selectViewMode = (state: any) => state.viewMode;
 
 export const TimeHistogram = () => {
   const { t, language } = useI18n();
-  const { logs, viewMode } = useLogStore(state => ({
-    logs: state.logs,
-    viewMode: state.viewMode
-  }), shallow);
+  const logs = useLogStore(selectLogs);
+  const viewMode = useLogStore(selectViewMode);
 
   const { bins, maxCount } = useMemo(() => {
     if (viewMode !== 'STREAM') return { bins: [], maxCount: 0 };
@@ -30,7 +31,7 @@ export const TimeHistogram = () => {
 
     let currentMax = 0;
     
-    logs.forEach(log => {
+    logs.forEach((log: any) => {
       try {
         const logTime = new Date(log.timestamp).getTime(); 
         if (logTime >= startTime) {
@@ -40,7 +41,7 @@ export const TimeHistogram = () => {
             currentMax = Math.max(currentMax, bins[binIndex].count);
           }
         }
-      } catch (e) {
+      } catch {
         // Ignore invalid timestamps
       }
     });

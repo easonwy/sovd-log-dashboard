@@ -5,29 +5,27 @@ import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { MAX_LOG_COUNT, PAGE_SIZE } from '@/constants/logConstants';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { shallow } from 'zustand/shallow';
 
 interface LogListHeaderProps {
   filteredLogCount: number;
 }
 
+// Memoized selectors to avoid infinite loops
+const selectViewMode = (state: any) => state.viewMode;
+const selectLogs = (state: any) => state.logs;
+const selectTotalLogsCount = (state: any) => state.totalLogsCount;
+const selectPage = (state: any) => state.page;
+const selectLoadHistory = (state: any) => state.loadHistory;
+const selectIsLoading = (state: any) => state.isLoading;
+
 export const LogListHeader = ({ filteredLogCount }: LogListHeaderProps) => {
   const { t } = useI18n();
-  const {
-    viewMode,
-    logs,
-    totalLogsCount,
-    page,
-    loadHistory,
-    isLoading
-  } = useLogStore(state => ({
-    viewMode: state.viewMode,
-    logs: state.logs,
-    totalLogsCount: state.totalLogsCount,
-    page: state.page,
-    loadHistory: state.loadHistory,
-    isLoading: state.isLoading
-  }), shallow);
+  const viewMode = useLogStore(selectViewMode);
+  const logs = useLogStore(selectLogs);
+  const totalLogsCount = useLogStore(selectTotalLogsCount);
+  const page = useLogStore(selectPage);
+  const loadHistory = useLogStore(selectLoadHistory);
+  const isLoading = useLogStore(selectIsLoading);
 
   const maxPage = Math.ceil(totalLogsCount / PAGE_SIZE);
 

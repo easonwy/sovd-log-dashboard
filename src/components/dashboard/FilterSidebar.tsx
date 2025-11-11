@@ -6,31 +6,30 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { getInitialFilters } from '@/utils/logUtils';
 import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import { Filter, ChevronDown, ChevronUp, Database } from 'lucide-react';
-import { shallow } from 'zustand/shallow';
+import { LogEntry, LogFilters } from '@/types';
+
+// Memoized selectors to avoid infinite loops
+const selectFilters = (state: { filters: LogFilters }) => state.filters;
+const selectSetFilters = (state: { setFilters: (filters: LogFilters) => void }) => state.setFilters;
+const selectViewMode = (state: { viewMode: 'STREAM' | 'HISTORY' }) => state.viewMode;
+const selectSetViewMode = (state: { setViewMode: (mode: 'STREAM' | 'HISTORY', clearLogs?: boolean) => void }) => state.setViewMode;
+const selectLogs = (state: { logs: LogEntry[] }) => state.logs;
 
 export const FilterSidebar = () => {
   const { t } = useI18n();
   const [openSection, setOpenSection] = useState<'levels' | 'modules'>('levels');
 
-  const {
-    filters,
-    setFilters,
-    viewMode,
-    setViewMode,
-    logs
-  } = useLogStore(state => ({
-    filters: state.filters,
-    setFilters: state.setFilters,
-    viewMode: state.viewMode,
-    setViewMode: state.setViewMode,
-    logs: state.logs, // Needed for counts in STREAM mode
-  }), shallow);
+  const filters = useLogStore(selectFilters);
+  const setFilters = useLogStore(selectSetFilters);
+  const viewMode = useLogStore(selectViewMode);
+  const setViewMode = useLogStore(selectSetViewMode);
+  const logs = useLogStore(selectLogs);
   
   // Calculate counts based on currently visible logs in STREAM mode
   const logCounts = useMemo(() => {
     if (viewMode !== 'STREAM') return {};
     const counts: Record<string, number> = {};
-    logs.forEach(log => {
+    logs.forEach((log: LogEntry) => {
       counts[log.level] = (counts[log.level] || 0) + 1;
       counts[log.module] = (counts[log.module] || 0) + 1;
     });
