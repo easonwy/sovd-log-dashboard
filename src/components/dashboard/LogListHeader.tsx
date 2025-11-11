@@ -1,6 +1,3 @@
-// src/components/dashboard/LogListHeader.tsx
-
-import React from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { MAX_LOG_COUNT, PAGE_SIZE } from '@/constants/logConstants';

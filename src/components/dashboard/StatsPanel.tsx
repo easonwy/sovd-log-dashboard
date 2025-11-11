@@ -1,7 +1,6 @@
 // src/components/dashboard/StatsPanel.tsx
 
-import React, { useMemo } from 'react';
-import { useLogStore } from '@/store/logStore';
+import { useMemo } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { getColorClass } from '@/utils/colorUtils';
 import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';

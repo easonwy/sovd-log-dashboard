@@ -1,6 +1,6 @@
 // src/components/dashboard/LogList.tsx
 
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { LogEntry } from '@/types';

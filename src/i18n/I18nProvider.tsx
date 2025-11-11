@@ -1,6 +1,4 @@
-// src/i18n/I18nProvider.tsx
-
-import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
+import { createContext, useState, useCallback, useContext, ReactNode } from 'react';
 import { Language } from '@/types';
 import { translations } from './translations';
 

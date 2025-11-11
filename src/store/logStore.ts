@@ -1,5 +1,3 @@
-// src/store/logStore.ts
-
 import { create } from 'zustand'
 import { LogEntry, LogFilters } from '@/types';
 import { getInitialFilters, generateDemoLogs } from '@/utils/logUtils';

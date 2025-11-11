@@ -1,6 +1,6 @@
 // src/components/dashboard/LogDetailPanel.tsx
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { LogEntry } from '@/types';
 import { useI18n } from '@/i18n/I18nProvider';
 import { X, Copy, Zap } from 'lucide-react';

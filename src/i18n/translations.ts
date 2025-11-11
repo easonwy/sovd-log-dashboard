@@ -1,5 +1,3 @@
-// src/i18n/translations.ts
-
 import { Language } from "@/types";
 
 /**

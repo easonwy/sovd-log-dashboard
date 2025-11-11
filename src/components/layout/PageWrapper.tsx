@@ -1,6 +1,4 @@
-// src/components/layout/PageWrapper.tsx
-
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 interface PageWrapperProps {
   children: ReactNode;

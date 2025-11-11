@@ -1,5 +1,3 @@
-// src/constants/logConstants.ts
-
 import { LogEntry } from '@/types';
 
 /**

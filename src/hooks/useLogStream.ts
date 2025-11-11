@@ -1,5 +1,3 @@
-// src/hooks/useLogStream.ts
-
 import { useEffect, useRef, useCallback } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { webSocketService } from '@/api/webSocketService';
