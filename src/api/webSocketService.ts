@@ -1,0 +1,3 @@
+// ... (Create this file with the WebSocketService class) ...
+// This file will manage the WebSocket connection.
+// The code for this can also be extracted and refactored from the App.js setupWebSocket logic.

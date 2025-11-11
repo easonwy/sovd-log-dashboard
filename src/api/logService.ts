@@ -1,0 +1,3 @@
+// ... (Create this file with the fetchHistoricalLogs function) ...
+// This file will contain the REST API logic.
+// The code for this file can be extracted from the original App.js and made a standalone function.
