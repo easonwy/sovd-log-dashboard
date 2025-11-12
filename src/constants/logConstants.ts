@@ -16,7 +16,7 @@ export const PAGE_SIZE = 500;
  * This is used for creating filters and statistical charts.
  * The type `LogEntry['level'][]` ensures that these values are consistent with the LogEntry interface.
  */
-export const LOG_LEVELS: LogEntry['level'][] = ['ERROR', 'WARN', 'INFO', 'SUCCESS'];
+export const LOG_LEVELS: LogEntry['level'][] = ['ERROR', 'WARN', 'INFO', 'FATAL'];
 
 /**
  * A predefined list of all SOVD-related modules that can generate logs.

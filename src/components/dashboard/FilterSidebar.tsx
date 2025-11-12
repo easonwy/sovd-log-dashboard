@@ -14,7 +14,7 @@ import { LogEntry, LogFilters } from '@/types';
 const selectFilters = (state: { filters: LogFilters }) => state.filters;
 const selectSetFilters = (state: { setFilters: (filters: LogFilters) => void }) => state.setFilters;
 const selectViewMode = (state: { viewMode: 'STREAM' | 'HISTORY' }) => state.viewMode;
-const selectSetViewMode = (state: { setViewMode: (mode: 'STREAM' | 'HISTORY', clearLogs?: boolean) => void }) => state.setViewMode;
+const selectSetViewMode = (state: { setViewMode: (mode: 'STREAM' | 'HISTORY') => void }) => state.setViewMode;
 const selectLogs = (state: { logs: LogEntry[] }) => state.logs;
 
 export const FilterSidebar = () => {
@@ -48,9 +48,15 @@ export const FilterSidebar = () => {
     });
   };
 
-  const handleHistorySearch = () => {
-    setViewMode('HISTORY', true);
-    // Load history will be triggered by the useEffect in useLogStream
+  const handleHistorySearch = async () => {
+    if (viewMode === 'HISTORY') {
+      // If already in HISTORY mode, refresh the data
+      await useLogStore.getState().refreshHistory();
+    } else {
+      // If in STREAM mode, switch to HISTORY mode
+      // useLogStream effect will handle loading history
+      setViewMode('HISTORY');
+    }
   };
   
   const handleClearFilters = () => {

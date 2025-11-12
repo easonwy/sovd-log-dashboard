@@ -24,7 +24,7 @@ export interface LogState {
   // --- ACTIONS ---
   setFilters: (filters: LogFilters) => void;
   setSearchText: (text: string) => void;
-  setViewMode: (mode: 'STREAM' | 'HISTORY', clearLogs?: boolean) => void;
+  setViewMode: (mode: 'STREAM' | 'HISTORY') => void;
   togglePause: () => void;
   addLog: (log: LogEntry) => void;
   setSelectedLog: (log: LogEntry | null) => void;
@@ -32,6 +32,7 @@ export interface LogState {
   
   // --- ASYNC ACTIONS ---
   loadHistory: (page?: number) => Promise<void>;
+  refreshHistory: () => Promise<void>;
 }
 
 /**
@@ -83,12 +84,13 @@ export const useLogStore = create<LogState>((set, get) => ({
     return { logs: newLogs.slice(0, MAX_LOG_COUNT) };
   }),
 
-  setViewMode: (mode, clearLogs = false) => set({ 
+  setViewMode: (mode) => set({ 
     viewMode: mode,
     page: 1,
     selectedLog: null,
     filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
-    logs: clearLogs ? [] : generateDemoLogs(),
+    logs: [], // Always clear logs when switching modes to prevent mixing data
+    totalLogsCount: 0, // Reset total count as well
   }),
 
   // --- ASYNC ACTION IMPLEMENTATION ---
@@ -124,5 +126,19 @@ export const useLogStore = create<LogState>((set, get) => ({
         logs: [], // Clear logs on error
       });
     }
+  },
+
+  refreshHistory: async () => {
+    // Refresh history by clearing state and loading fresh data
+    const currentPage = get().page;
+    set({ 
+      logs: [],
+      totalLogsCount: 0,
+      isLoading: true,
+      connectionError: null,
+      selectedLog: null,
+    });
+    // Fetch fresh data for the current page
+    await get().loadHistory(currentPage);
   },
 }));
