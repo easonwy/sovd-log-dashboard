@@ -127,3 +127,5 @@ export const DashboardPage = () => {
     </PageWrapper>
   );
 };
+
+export default DashboardPage;

@@ -11,8 +11,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "load-test": "node scripts/load-test.js",
-    "server": "node server.js",
-    "server:prod": "NODE_ENV=production node server.js"
+    "server": "npm run build && NODE_ENV=development node server.js",
+    "server:prod": "npm run build && NODE_ENV=production node server.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.22",

@@ -11,7 +11,7 @@ const getWebSocketUrl = (): string => {
     : typeof window !== 'undefined'
       ? `ws://${window.location.host}`
       : 'ws://localhost:3000';
-  return `${baseUrl}/ws/logs`;
+  return `${baseUrl}/api/ws`;
 };
 
 const FORCE_MOCK = process.env.NEXT_PUBLIC_FORCE_MOCK_API === 'true';
@@ -91,8 +91,22 @@ class WebSocketService {
 
     this.ws.onmessage = (event) => {
       try {
-        const log = JSON.parse(event.data);
-        useLogStore.getState().addLog(log);
+        const message = JSON.parse(event.data);
+        
+        // Handle different message types
+        if (message.type === 'heartbeat') {
+          // Server heartbeat, just acknowledge
+          console.log('[WS] Heartbeat received');
+        } else if (message.type === 'log') {
+          // Log message from server
+          const log = message.payload;
+          useLogStore.getState().addLog(log);
+        } else if (message.payload && message.payload.id && message.payload.timestamp) {
+          // Legacy format: assume it's a log entry (backwards compatibility)
+          useLogStore.getState().addLog(message);
+        } else {
+          console.log('[WS] Received message:', message.type || 'unknown');
+        }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);
       }

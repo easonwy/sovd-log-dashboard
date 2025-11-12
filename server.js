@@ -52,8 +52,46 @@ app.prepare().then(() => {
   const wss = new WebSocketServer({ noServer: true });
 
   // Initialize WebSocket service
-  const { getWSService } = require('./src/server/services/wsService');
-  const wsService = getWSService();
+  // The wsService is loaded from the compiled TypeScript output
+  let wsService;
+  try {
+    // Try to load from TypeScript source using require hook
+    // Register ts-node if available for development
+    if (dev) {
+      try {
+        require('ts-node').register({
+          project: './tsconfig.json',
+          transpileOnly: true,
+        });
+      } catch (e) {
+        // ts-node not available, will try .next output
+      }
+    }
+    
+    // Try to load from .next build output first
+    try {
+      const { getWSService } = require('./.next/server/src/server/services/wsService.js');
+      wsService = getWSService();
+      console.log('[WebSocket] Loaded wsService from build output');
+    } catch (buildError) {
+      // Fall back to source TypeScript
+      if (dev) {
+        const { getWSService } = require('./src/server/services/wsService.ts');
+        wsService = getWSService();
+        console.log('[WebSocket] Loaded wsService from TypeScript source');
+      } else {
+        throw buildError;
+      }
+    }
+  } catch (error) {
+    // Fallback: create a minimal wsService for development
+    console.warn('[WebSocket] Could not load wsService, using stub:', error.message);
+    wsService = {
+      initialize: (wss) => console.log('[WebSocket] Service initialized (stub)'),
+      shutdown: () => console.log('[WebSocket] Service shutdown (stub)'),
+      broadcastLog: (log) => console.log('[WebSocket] Broadcasting log (stub)'),
+    };
+  }
   wsService.initialize(wss);
 
   // Handle WebSocket upgrade requests
@@ -112,5 +150,3 @@ app.prepare().then(() => {
     `);
   });
 });
-
-module.exports = { wss };
