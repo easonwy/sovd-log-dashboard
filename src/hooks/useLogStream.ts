@@ -39,9 +39,11 @@ export const useLogStream = () => {
     // 3. Return a cleanup function that runs when the component unmounts.
     // This is crucial to prevent memory leaks and unnecessary background connections.
     return () => {
+      // In React Strict Mode (development), components mount, unmount, then mount again.
+      // Ensure we close any in-flight socket to avoid duplicate connections.
       if (initialized.current) {
-         // If you want it to disconnect only when the page is truly closed,
-         // you can handle this differently. For now, this is safer.
+        webSocketService.disconnect();
+        initialized.current = false;
       }
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount.

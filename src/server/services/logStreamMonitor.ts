@@ -1,5 +1,7 @@
-import { executeQuery, isConnected } from '@/server/db/client';
-import { rowToLogEntry, type LogRow } from '@/server/db/queries';
+// Use relative imports so this file works when loaded directly by Node (ts-node)
+// The alias '@' is resolved by Next.js, but not by the custom server runtime.
+import { executeQuery, isConnected } from '../db/client';
+import { rowToLogEntry, type LogRow } from '../db/queries';
 import { getWSService } from './wsService';
 
 /**

@@ -127,8 +127,9 @@ app.prepare().then(() => {
 
   // Handle WebSocket upgrade requests
   server.on('upgrade', (req, socket, head) => {
-    // Only upgrade if the path is /api/ws
-    if (req.url === '/api/ws') {
+    // Only upgrade if the path is /api/ws (allow trailing slash and query string)
+    const { pathname } = parse(req.url || '', true);
+    if (pathname === '/api/ws') {
       try {
         console.log('[WebSocket] Handling upgrade request from', req.headers['x-forwarded-for'] || req.socket.remoteAddress);
         

@@ -32,8 +32,9 @@ class WebSocketService {
       return;
     }
 
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      console.log('[WebSocket] Already connected, skipping connect');
+    // Prevent creating multiple sockets during React Strict Mode remounts
+    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+      console.log('[WebSocket] Already connecting/connected, skipping connect. State:', this.ws.readyState);
       return;
     }
 
@@ -109,6 +110,13 @@ class WebSocketService {
         console.log('[WebSocket] Calling setConnectionStatus');
         store.setConnectionStatus({ isConnected: true });
         console.log('[WebSocket] Connection status set to connected');
+
+        // Proactively sync current filters on connect to ensure server state is aligned
+        try {
+          this.sendFilters(store.filters);
+        } catch (e) {
+          console.warn('[WebSocket] Failed to send initial filters after open:', e);
+        }
       } catch (error) {
         console.error('[WebSocket] Error in onopen handler:', error);
         throw error; // Re-throw to see if this causes the close
