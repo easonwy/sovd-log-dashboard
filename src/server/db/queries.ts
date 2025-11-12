@@ -14,7 +14,7 @@ export interface LogRow {
   level: string;
   message: string;
   trace_id: string | null;
-  details: string | null;
+  details: string | object | null;
   create_time: string;
 }
 
@@ -22,6 +22,22 @@ export interface LogRow {
  * Convert database row to LogEntry
  */
 export function rowToLogEntry(row: LogRow): LogEntry {
+  let parsedDetails = null;
+  
+  if (row.details) {
+    // Handle both string and object cases
+    // MySQL JSON columns may return already-parsed objects
+    if (typeof row.details === 'string') {
+      try {
+        parsedDetails = JSON.parse(row.details);
+      } catch {
+        parsedDetails = null;
+      }
+    } else if (typeof row.details === 'object') {
+      parsedDetails = row.details;
+    }
+  }
+  
   return {
     id: row.id,
     timestamp: row.timestamp,
@@ -29,7 +45,7 @@ export function rowToLogEntry(row: LogRow): LogEntry {
     level: row.level as LogEntry['level'],
     message: row.message,
     traceId: row.trace_id || '',
-    details: row.details ? JSON.parse(row.details) : null,
+    details: parsedDetails,
   };
 }
 
@@ -93,7 +109,7 @@ export function getCountQuery(
 ): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
-  const query = `SELECT COUNT(*) as total FROM infra_module_logs ${clause}`;
+  const query = `SELECT COUNT(*) as count FROM infra_module_logs ${clause}`;
   
   return { query, params };
 }

@@ -58,22 +58,28 @@ export const fetchHistoricalLogs = async (
   queryParams.append('offset', offset.toString());
   queryParams.append('limit', limit.toString());
 
+  const url = `${BACKEND_URL}/api/v1/logs?${queryParams.toString()}`;
+  console.log('[API] Fetching logs from:', url);
+
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/logs?${queryParams.toString()}`);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP Error! Status: ${response.status}`);
     }
 
     const apiData: ApiResponse<HistoryResponse> = await response.json();
+    console.log('[API] Response received:', apiData);
 
     if (!apiData.success) {
       throw new Error(apiData.error?.message || 'API returned error');
     }
 
-    return {
+    const result = {
       logs: apiData.data?.logs || [],
       total: apiData.data?.total || 0,
     };
+    console.log('[API] Returning:', { logsCount: result.logs.length, total: result.total });
+    return result;
   } catch (error) {
     console.error('Real API fetch failed, falling back to mock data.', error);
     return getMockHistory(offset, limit);

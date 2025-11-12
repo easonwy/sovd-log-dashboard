@@ -56,6 +56,7 @@ export const DashboardPage = () => {
    */
   const filteredLogs = useMemo(() => {
     if (viewMode === 'HISTORY') {
+      console.log('[Dashboard] In HISTORY mode, returning logs directly:', { count: logs.length, logs: logs.slice(0, 2) });
       return logs;
     }
     

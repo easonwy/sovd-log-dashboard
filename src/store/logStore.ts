@@ -97,6 +97,7 @@ export const useLogStore = create<LogState>((set, get) => ({
     const { filters } = get();
     const targetPage = newPage ?? 1;
     
+    console.log('[Store] Loading history for page:', targetPage, 'with filters:', filters);
     set({ isLoading: true, connectionError: null, selectedLog: null });
     
     try {
@@ -104,6 +105,8 @@ export const useLogStore = create<LogState>((set, get) => ({
       // In STREAM mode, we are fetching an initial buffer, not a "page".
       const limit = PAGE_SIZE; 
       const data = await fetchHistoricalLogs(offset, limit, filters);
+
+      console.log('[Store] History loaded:', { logsCount: data.logs.length, total: data.total });
 
       set({ 
         logs: data.logs, 
