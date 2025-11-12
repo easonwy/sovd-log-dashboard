@@ -93,7 +93,7 @@ export function getCountQuery(
 ): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
-  const query = `SELECT COUNT(*) as total FROM logs ${clause}`;
+  const query = `SELECT COUNT(*) as total FROM infra_module_logs ${clause}`;
   
   return { query, params };
 }
@@ -115,17 +115,23 @@ export function getLogsQuery(
 ): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
+  // Sanitize limit and offset - ensure they're positive integers
+  const safeLimit = Math.max(0, Math.floor(Number(limit) || 0));
+  const safeOffset = Math.max(0, Math.floor(Number(offset) || 0));
+  
+  // Note: LIMIT and OFFSET are not parameterized in mysql2 prepared statements
+  // They must be part of the query string itself
   const query = `
     SELECT id, timestamp, module, level, message, trace_id, details, create_time
     FROM infra_module_logs
     ${clause}
     ORDER BY timestamp DESC
-    LIMIT ? OFFSET ?
+    LIMIT ${safeLimit} OFFSET ${safeOffset}
   `.trim();
-
+  
   return {
     query,
-    params: [...params, limit, offset],
+    params,
   };
 }
 
@@ -140,7 +146,7 @@ export function getLevelDistributionQuery(
   
   const query = `
     SELECT level, COUNT(*) as count
-    FROM logs
+    FROM infra_module_logs
     ${clause}
     GROUP BY level
   `.trim();
@@ -162,7 +168,7 @@ export function getModuleDistributionQuery(
   
   const query = `
     SELECT module, COUNT(*) as count
-    FROM logs
+    FROM infra_module_logs
     ${clause}
     GROUP BY module
   `.trim();
@@ -203,7 +209,7 @@ export function getTimeSeriesQuery(
   
   const query = `
     SELECT DATE_FORMAT(timestamp, '${dateFormat}') as timestamp, COUNT(*) as count
-    FROM logs
+    FROM infra_module_logs
     ${clause}
     GROUP BY DATE_FORMAT(timestamp, '${dateFormat}')
     ORDER BY timestamp ASC
@@ -226,7 +232,7 @@ export function getInsertLogQuery(log: {
   message: string;
   traceId: string;
   details: object | null;
-}): { query: string; params: (string | object | null)[] } {
+}): { query: string; params: (string | number | null)[] } {
   const query = `
     INSERT INTO infra_module_logs (id, timestamp, module, level, message, trace_id, details, create_time)
     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
@@ -251,7 +257,7 @@ export function getInsertLogQuery(log: {
  */
 export function getTotalCountQuery(): { query: string; params: (string | number)[] } {
   return {
-    query: 'SELECT COUNT(*) as count FROM logs',
+    query: 'SELECT COUNT(*) as count FROM infra_module_logs',
     params: [],
   };
 }

@@ -27,7 +27,7 @@
 -- and efficient querying by timestamp, level, module, and trace ID.
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS logs (
+CREATE TABLE IF NOT EXISTS infra_module_logs (
   -- Unique identifier for each log entry (UUID v4 as string)
   id VARCHAR(36) NOT NULL PRIMARY KEY COMMENT '唯一日志标识符 (UUID)',
   
@@ -72,35 +72,35 @@ COMMENT='应用日志表 - 存储所有应用日志数据';
 -- Usage: ORDER BY timestamp DESC, time-range filtering (startTime, endTime)
 -- Impact: Dramatically improves pagination queries and time-series aggregation
 CREATE INDEX IF NOT EXISTS idx_logs_timestamp 
-  ON logs (timestamp DESC) 
+  ON infra_module_logs (timestamp DESC) 
   COMMENT 'Performance: Supports timestamp-based sorting and range queries';
 
 -- Level index: For filtering logs by severity
 -- Usage: WHERE level IN ('ERROR', 'WARNING')
 -- Impact: Accelerates level distribution queries
 CREATE INDEX IF NOT EXISTS idx_logs_level 
-  ON logs (level) 
+  ON infra_module_logs (level) 
   COMMENT 'Performance: Supports filtering by log level';
 
 -- Module index: For filtering logs by source service
 -- Usage: WHERE module IN ('AUTH', 'ORDER')
 -- Impact: Accelerates module distribution and service-specific queries
 CREATE INDEX IF NOT EXISTS idx_logs_module 
-  ON logs (module) 
+  ON infra_module_logs (module) 
   COMMENT 'Performance: Supports filtering by module/service';
 
 -- Trace ID index: For distributed tracing and request correlation
 -- Usage: WHERE trace_id = 'xyz123' (useful for finding related logs)
 -- Impact: Enables efficient trace-based log retrieval
 CREATE INDEX IF NOT EXISTS idx_logs_trace_id 
-  ON logs (trace_id) 
+  ON infra_module_logs (trace_id) 
   COMMENT 'Performance: Supports distributed tracing and correlation queries';
 
 -- Composite index: For common filtering patterns
 -- Usage: WHERE level = 'ERROR' AND timestamp >= startTime
 -- Impact: Enables index-only scans for common error analysis queries
 CREATE INDEX IF NOT EXISTS idx_logs_level_timestamp 
-  ON logs (level, timestamp DESC) 
+  ON infra_module_logs (level, timestamp DESC) 
   COMMENT 'Performance: Supports combined level and timestamp queries';
 
 -- ============================================================================
@@ -110,16 +110,16 @@ CREATE INDEX IF NOT EXISTS idx_logs_level_timestamp
 -- ============================================================================
 
 -- Show table structure:
--- DESCRIBE logs;
+-- DESCRIBE infra_module_logs;
 
 -- Show all indexes:
--- SHOW INDEXES FROM logs;
+-- SHOW INDEXES FROM infra_module_logs;
 
 -- Count current logs:
--- SELECT COUNT(*) FROM logs;
+-- SELECT COUNT(*) FROM infra_module_logs;
 
 -- Test a sample query:
 -- SELECT id, timestamp, module, level, message, trace_id 
--- FROM logs 
+-- FROM infra_module_logs 
 -- ORDER BY timestamp DESC 
 -- LIMIT 10;
