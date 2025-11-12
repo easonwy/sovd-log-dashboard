@@ -33,14 +33,21 @@ jest.mock('ws', () => {
 })
 
 // Import WSService after mocking
-import { getWSService } from '@/server/services/wsService'
+// We use require inside beforeEach to get a fresh singleton for each test
+import type { WSService } from '@/server/services/wsService'
 
 describe('WSService - WebSocket Server Service', () => {
-  let wsService: ReturnType<typeof getWSService>
+  let wsService: WSService
   let mockWss: MockServer
+  let getWSService: () => WSService
 
   beforeEach(() => {
-    // Get fresh instance
+    // Reset modules to ensure a fresh singleton instance for each test
+    jest.resetModules()
+    const wsServiceModule = require('@/server/services/wsService')
+    getWSService = wsServiceModule.getWSService
+
+    // Get fresh instance for the test
     wsService = getWSService()
 
     // Create mock WebSocket server
@@ -52,6 +59,10 @@ describe('WSService - WebSocket Server Service', () => {
   })
 
   afterEach(() => {
+    // Shutdown the service to clear any running timers (like heartbeat)
+    if (wsService) {
+      wsService.shutdown()
+    }
     jest.clearAllMocks()
   })
 

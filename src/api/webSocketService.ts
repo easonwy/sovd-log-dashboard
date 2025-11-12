@@ -119,7 +119,6 @@ class WebSocketService {
         }
       } catch (error) {
         console.error('[WebSocket] Error in onopen handler:', error);
-        throw error; // Re-throw to see if this causes the close
       }
     };
 
