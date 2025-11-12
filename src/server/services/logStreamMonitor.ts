@@ -30,21 +30,24 @@ class LogStreamMonitor {
       return;
     }
 
-    if (!isConnected()) {
-      console.warn('[LogStreamMonitor] Database not connected, skipping monitor startup');
-      return;
-    }
+    // Wrap in async IIFE to handle the async isConnected() call
+    (async () => {
+      if (!await isConnected()) {
+        console.warn('[LogStreamMonitor] Database not connected, skipping monitor startup');
+        return;
+      }
 
-    this.isRunning = true;
-    console.log('[LogStreamMonitor] Starting log stream monitor');
+      this.isRunning = true;
+      console.log('[LogStreamMonitor] Starting log stream monitor');
 
-    // Initial poll
-    this.pollNewLogs();
-
-    // Set up recurring poll
-    this.monitorIntervalId = setInterval(() => {
+      // Initial poll
       this.pollNewLogs();
-    }, this.POLL_INTERVAL);
+
+      // Set up recurring poll
+      this.monitorIntervalId = setInterval(() => {
+        this.pollNewLogs();
+      }, this.POLL_INTERVAL);
+    })();
   }
 
   /**
@@ -63,11 +66,18 @@ class LogStreamMonitor {
    * Poll database for new logs since last check
    */
   private async pollNewLogs(): Promise<void> {
-    if (!this.isRunning || !isConnected()) {
+    // Check if monitor is running and database is connected
+    if (!this.isRunning) {
       return;
     }
 
     try {
+      const connected = await isConnected();
+      if (!connected) {
+        console.warn('[LogStreamMonitor] Database not connected, skipping poll');
+        return;
+      }
+
       const query = `
         SELECT id, timestamp, module, level, message, trace_id, details, create_time
         FROM infra_module_logs
@@ -87,11 +97,26 @@ class LogStreamMonitor {
         this.lastTimestamp = latestLog.timestamp;
 
         // Broadcast each new log to connected clients
-        const wsService = getWSService();
-        rows.forEach((row) => {
-          const logEntry = rowToLogEntry(row);
-          wsService.broadcastLog(logEntry);
-        });
+        try {
+          const wsService = getWSService();
+          let broadcastCount = 0;
+          
+          rows.forEach((row) => {
+            try {
+              const logEntry = rowToLogEntry(row);
+              wsService.broadcastLog(logEntry);
+              broadcastCount++;
+            } catch (error) {
+              console.error('[LogStreamMonitor] Error converting row to log entry:', error);
+            }
+          });
+          
+          if (broadcastCount > 0) {
+            console.log(`[LogStreamMonitor] Broadcasted ${broadcastCount} logs to connected clients`);
+          }
+        } catch (error) {
+          console.error('[LogStreamMonitor] Error during broadcast:', error);
+        }
       }
     } catch (error) {
       console.error('[LogStreamMonitor] Error polling for new logs:', error);

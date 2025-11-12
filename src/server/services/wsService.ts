@@ -68,35 +68,36 @@ export class WSService {
     if (!this.wss) return;
 
     this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-      const clientId = this.generateClientId();
-      const clientIp = this.getClientIp(req);
-
-      console.log(`[WS] Client connected: ${clientId} from ${clientIp}`);
-
-      // Initialize client session
-      const session: ClientSession = {
-        id: clientId,
-        filters: this.getDefaultFilters(),
-        lastHeartbeat: Date.now(),
-      };
-
-      this.clients.set(ws, session);
-
-      // Setup event handlers for this client
-      this.setupClientHandlers(ws, session);
-
-      // Send initial welcome message
       try {
-        this.send(ws, {
-          type: 'heartbeat',
-          payload: {
-            message: 'Connected to log stream',
-            clientId,
-            timestamp: Date.now(),
-          },
-        });
+        const clientId = this.generateClientId();
+        const clientIp = this.getClientIp(req);
+
+        console.log(`[WS] Client connected: ${clientId} from ${clientIp}`);
+
+        // Initialize client session
+        const session: ClientSession = {
+          id: clientId,
+          filters: this.getDefaultFilters(),
+          lastHeartbeat: Date.now(),
+        };
+
+        this.clients.set(ws, session);
+        console.log(`[WS] Client session created for ${clientId}, clients count: ${this.clients.size}`);
+
+        // Setup event handlers for this client FIRST - don't send any initial message
+        console.log(`[WS] About to setup client handlers for ${clientId}`);
+        this.setupClientHandlers(ws, session);
+        
+        // Log successful connection
+        console.log(`[WS] Connection handler setup complete for ${clientId}`);
       } catch (error) {
-        console.error(`[WS] Failed to send welcome message to ${clientId}:`, error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error('[WS] Error in connection handler:', errorMsg, error instanceof Error ? error.stack : '');
+        try {
+          ws.close(1011, 'Internal server error');
+        } catch (closeError) {
+          console.error('[WS] Failed to close connection:', closeError);
+        }
       }
     });
 
@@ -110,29 +111,45 @@ export class WSService {
    * Setup event handlers for individual client
    */
   private setupClientHandlers(ws: WebSocket, session: ClientSession): void {
+    console.log(`[WS] Starting setupClientHandlers for ${session.id}`);
+    
     ws.on('message', (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString()) as WebSocketMessage;
+        console.log(`[WS] Message from ${session.id}:`, message.type);
         this.handleClientMessage(ws, session, message);
       } catch (error) {
-        console.error(`[WS] Failed to parse message from ${session.id}:`, error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(`[WS] Error parsing message from ${session.id}:`, errorMsg);
         // Don't close connection on parse errors - just log and continue
       }
     });
 
     ws.on('error', (error: Error) => {
-      console.error(`[WS] Error from client ${session.id}:`, error.message);
-      // Client error handler - don't throw, just log
+      console.error(`[WS] Socket error from ${session.id}:`, error.message);
+      // Don't do anything on error - let the close handler deal with cleanup
     });
 
     ws.on('close', (code: number, reason: string) => {
-      console.log(`[WS] Client disconnected: ${session.id} (code: ${code}, reason: ${reason})`);
+      console.log(`[WS] Client disconnected: ${session.id} (code: ${code}, reason: '${reason || 'none'}')`);
       this.clients.delete(ws);
     });
 
     ws.on('pong', () => {
       session.lastHeartbeat = Date.now();
+      console.log(`[WS] Pong from ${session.id}`);
     });
+
+    ws.on('ping', () => {
+      console.log(`[WS] Ping from ${session.id}`);
+      try {
+        ws.pong();
+      } catch (error) {
+        console.error(`[WS] Failed to respond to ping from ${session.id}:`, error);
+      }
+    });
+    
+    console.log(`[WS] All event handlers registered for ${session.id}, ws.readyState=${ws.readyState}`);
   }
 
   /**
@@ -192,8 +209,12 @@ export class WSService {
    * (e.g., from log ingestion endpoint or queue)
    */
   public broadcastLog(log: LogEntry): void {
-    if (this.clients.size === 0) return;
+    if (this.clients.size === 0) {
+      console.log('[WS] No connected clients to broadcast to');
+      return;
+    }
 
+    let sentCount = 0;
     // Iterate through all connected clients
     for (const [ws, session] of this.clients.entries()) {
       // Apply client's filter to log
@@ -203,7 +224,12 @@ export class WSService {
           payload: log,
           timestamp: Date.now(),
         });
+        sentCount++;
       }
+    }
+
+    if (sentCount > 0) {
+      console.log(`[WS] Broadcasted log (${log.id}) to ${sentCount} clients`);
     }
   }
 
@@ -261,12 +287,19 @@ export class WSService {
    * Send message to a specific client
    */
   private send(ws: WebSocket, message: WebSocketMessage): void {
-    if (ws.readyState === WebSocket.OPEN) {
-      try {
-        ws.send(JSON.stringify(message));
-      } catch (error) {
-        console.error('[WS] Failed to send message:', error);
-      }
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      const state = ws ? `state ${ws.readyState}` : 'null';
+      console.warn(`[WS] Cannot send - connection not open (${state})`);
+      return;
+    }
+
+    try {
+      const payload = JSON.stringify(message);
+      ws.send(payload);
+      console.log(`[WS] Sent message type: ${message.type}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error('[WS] Failed to send message:', errorMsg);
     }
   }
 

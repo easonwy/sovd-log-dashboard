@@ -32,17 +32,23 @@ class WebSocketService {
       return;
     }
 
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) return;
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log('[WebSocket] Already connected, skipping connect');
+      return;
+    }
 
     // Clear any previous mock stream before attempting a real connection
     this.stopMockStream();
 
     const wsUrl = getWebSocketUrl();
+    console.log('[WebSocket] Attempting to connect to:', wsUrl);
     try {
       this.ws = new WebSocket(wsUrl);
+      console.log('[WebSocket] WebSocket object created, readyState:', this.ws.readyState);
       this.setupEventHandlers();
+      console.log('[WebSocket] Event handlers set up');
     } catch (error) {
-      console.error('Failed to create WebSocket instance:', error);
+      console.error('[WebSocket] Failed to create WebSocket instance:', error);
       this.handleConnectionFailure();
     }
   }
@@ -66,61 +72,97 @@ class WebSocketService {
   }
 
   public sendFilters(filters: LogFilters): void {
+    console.log('[WS] sendFilters called, WS state:', this.ws?.readyState, 'readyState.OPEN=', WebSocket.OPEN);
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
-        this.ws.send(
-          JSON.stringify({
-            type: 'filter',
-            payload: filters,
-          })
-        );
+        const message = {
+          type: 'filter',
+          payload: filters,
+        };
+        console.log('[WS] Sending filters:', message);
+        this.ws.send(JSON.stringify(message));
+        console.log('[WS] Filters sent successfully');
       } catch (error) {
-        console.error('Failed to send filters:', error);
+        console.error('[WS] Failed to send filters:', error);
+        throw error;
       }
+    } else {
+      console.warn('[WS] Cannot send filters - WebSocket not open. State:', this.ws?.readyState);
     }
   }
 
   private setupEventHandlers(): void {
-    if (!this.ws) return;
+    if (!this.ws) {
+      console.error('[WebSocket] No WebSocket object to setup handlers for');
+      return;
+    }
+
+    console.log('[WebSocket] Setting up event handlers');
 
     this.ws.onopen = () => {
-      console.log('Real WebSocket connection established.');
-      this.reconnectAttempts = 0; // Reset reconnection counter
-      useLogStore.getState().setConnectionStatus({ isConnected: true });
+      console.log('[WebSocket] *** ONOPEN FIRED *** readyState:', this.ws?.readyState);
+      try {
+        console.log('[WebSocket] Accessing reconnectAttempts');
+        this.reconnectAttempts = 0; // Reset reconnection counter
+        console.log('[WebSocket] Getting store state');
+        const store = useLogStore.getState();
+        console.log('[WebSocket] Calling setConnectionStatus');
+        store.setConnectionStatus({ isConnected: true });
+        console.log('[WebSocket] Connection status set to connected');
+      } catch (error) {
+        console.error('[WebSocket] Error in onopen handler:', error);
+        throw error; // Re-throw to see if this causes the close
+      }
     };
 
     this.ws.onmessage = (event) => {
+      console.log('[WebSocket] *** ONMESSAGE FIRED ***');
       try {
+        if (!event.data) {
+          console.warn('[WS] Received empty message');
+          return;
+        }
+
         const message = JSON.parse(event.data);
+        console.log('[WS] Message received, type:', message.type);
         
         // Handle different message types
         if (message.type === 'heartbeat') {
-          // Server heartbeat, just acknowledge
-          console.log('[WS] Heartbeat received');
-        } else if (message.type === 'log') {
-          // Log message from server
-          const log = message.payload;
-          useLogStore.getState().addLog(log);
-        } else if (message.payload && message.payload.id && message.payload.timestamp) {
-          // Legacy format: assume it's a log entry (backwards compatibility)
-          useLogStore.getState().addLog(message);
+          console.log('[WS] Heartbeat received from server');
+        } else if (message.type === 'log' && message.payload) {
+          try {
+            const log = message.payload;
+            console.log('[WS] Adding log to store:', log.id);
+            useLogStore.getState().addLog(log);
+          } catch (storeError) {
+            console.error('[WS] Error adding log to store:', storeError);
+          }
+        } else if (message.id && message.timestamp) {
+          try {
+            console.log('[WS] Adding legacy log to store:', message.id);
+            useLogStore.getState().addLog(message);
+          } catch (storeError) {
+            console.error('[WS] Error adding legacy log to store:', storeError);
+          }
         } else {
-          console.log('[WS] Received message:', message.type || 'unknown');
+          console.log('[WS] Unknown message type:', message.type);
         }
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+        console.error('[WebSocket] Error in onmessage handler:', error);
       }
     };
 
     this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      this.ws?.close();
+      console.error('[WebSocket] *** ONERROR FIRED *** WebSocket error event:', error);
     };
 
-    this.ws.onclose = () => {
-      console.log('Real WebSocket connection closed.');
+    this.ws.onclose = (event) => {
+      console.log('[WebSocket] *** ONCLOSE FIRED *** Connection closed, code:', event.code, 'reason:', event.reason, 'clean:', event.wasClean);
+      this.ws = null;
       this.handleConnectionFailure();
     };
+
+    console.log('[WebSocket] Event handlers attached successfully');
   }
 
   private handleConnectionFailure(): void {
@@ -139,8 +181,8 @@ class WebSocketService {
         this.connect();
       }, delay);
     } else {
-      // After max reconnection attempts, fallback to mock stream
-      console.warn('Max reconnection attempts reached. Starting MOCK data stream as a fallback.');
+      // After max reconnection attempts, fallback to mock stream as last resort
+      console.error('Max reconnection attempts reached. WebSocket failed, using MOCK stream as fallback.');
       this.startMockStream();
     }
   }
