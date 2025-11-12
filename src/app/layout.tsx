@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import React from 'react';
-import { Providers } from './providers';
+import Providers from './providers';
 import '../index.css';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const metadata: Metadata = {
   title: 'SOVD Log Dashboard',
   description: 'Real-time log streaming and analysis dashboard',

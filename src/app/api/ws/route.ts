@@ -1,6 +1,4 @@
 import { NextRequest } from 'next/server';
-import { Server as SocketIOServer } from 'ws';
-import { getWSService } from '@/server/services/wsService';
 
 /**
  * WebSocket Upgrade Handler for Next.js
@@ -22,36 +20,6 @@ import { getWSService } from '@/server/services/wsService';
  * 4. Initialize WebSocket server if not already done
  * 5. Client is now connected to the real-time log stream
  */
-
-// Global WebSocket server instance
-// In a serverless environment, this persists across requests due to
-// Node.js module caching. Be careful about memory leaks.
-let wss: SocketIOServer | null = null;
-
-/**
- * Initialize WebSocket server on first request
- * This is called once when the first WebSocket connection arrives
- *
- * For self-hosted deployments that have direct Node.js socket access,
- * see the documentation below for proper implementation.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function initializeWebSocketServer(): SocketIOServer {
-  if (wss) {
-    return wss;
-  }
-
-  console.log('[WebSocket] Initializing WebSocket server...');
-
-  // Create WebSocket server from the underlying socket
-  wss = new SocketIOServer({ noServer: true });
-
-  // Initialize the WebSocket service with our server instance
-  const wsService = getWSService();
-  wsService.initialize(wss);
-
-  return wss;
-}
 
 /**
  * GET /api/ws

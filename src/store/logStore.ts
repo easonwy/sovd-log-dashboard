@@ -8,7 +8,7 @@ import { PAGE_SIZE, MAX_LOG_COUNT } from '@/constants/logConstants';
  * Defines the complete shape of our application's state,
  * including both the data and the actions that can modify it.
  */
-interface LogState {
+export interface LogState {
   // --- STATE ---
   logs: LogEntry[];
   filters: LogFilters;
@@ -111,7 +111,7 @@ export const useLogStore = create<LogState>((set, get) => ({
         page: targetPage,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to load historical logs:", error);
       // Use a generic, translated error message for the UI.
       // The actual error is logged to the console for developers.

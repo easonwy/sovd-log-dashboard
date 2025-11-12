@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LogEntry } from '@/types';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -14,20 +14,22 @@ interface LogItemProps {
 
 const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
   const { t, language } = useI18n();
+  const [timeString, setTimeString] = useState<string>('');
 
-  const timeString = useMemo(() => {
+  useEffect(() => {
     try {
       const locale = language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US';
-      return new Date(log.timestamp).toLocaleTimeString(locale, {
+      const formatted = new Date(log.timestamp).toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         hour12: false,
       });
+      setTimeString(formatted);
     } catch {
-      return t('invalidTime');
+      setTimeString(t('invalidTime'));
     }
-  }, [log.timestamp, t, language]);
+  }, [log.timestamp, language, t]);
 
   const getLevelClasses = (level: LogEntry['level']) => {
     switch (level) {

@@ -60,18 +60,17 @@ export async function getPool(): Promise<Pool> {
 }
 
 /**
- * Execute a query with optional parameters
+ * Execute a query and return all rows
  */
-export async function executeQuery<T = any>(
-  query: string,
-  params?: any[]
+export async function executeQuery<T = Record<string, unknown>>(
+  sql: string,
+  params?: (string | number | null)[]
 ): Promise<T[]> {
   const pool = await getPool();
   const connection = await pool.getConnection();
-
   try {
-    const [rows] = await connection.execute(query, params || []);
-    return rows as T[];
+    const [results] = await connection.execute(sql, params || []);
+    return results as T[];
   } finally {
     connection.release();
   }
@@ -80,9 +79,9 @@ export async function executeQuery<T = any>(
 /**
  * Execute a query and get a single row
  */
-export async function executeQueryOne<T = any>(
+export async function executeQueryOne<T = Record<string, unknown>>(
   query: string,
-  params?: any[]
+  params?: (string | number | null)[]
 ): Promise<T | null> {
   const results = await executeQuery<T>(query, params);
   return results.length > 0 ? results[0] : null;

@@ -7,7 +7,7 @@ import { LogEntry } from '@/types';
  * It helps keep queries organized and maintainable.
  */
 
-interface LogRow {
+export interface LogRow {
   id: string;
   timestamp: string;
   module: string;
@@ -25,8 +25,8 @@ export function rowToLogEntry(row: LogRow): LogEntry {
   return {
     id: row.id,
     timestamp: row.timestamp,
-    module: row.module as any,
-    level: row.level as any,
+    module: row.module as LogEntry['module'],
+    level: row.level as LogEntry['level'],
     message: row.message,
     traceId: row.trace_id || '',
     details: row.details ? JSON.parse(row.details) : null,
@@ -42,9 +42,9 @@ export function buildWhereClause(
   search: string,
   startTime: string | null,
   endTime: string | null
-): { clause: string; params: any[] } {
+): { clause: string; params: (string | number)[] } {
   const conditions: string[] = [];
-  const params: any[] = [];
+  const params: (string | number)[] = [];
 
   // Filter by levels
   if (levels.length > 0) {
@@ -82,7 +82,7 @@ export function buildWhereClause(
 }
 
 /**
- * Get total count of logs matching criteria
+ * Get count query
  */
 export function getCountQuery(
   levels: string[],
@@ -90,27 +90,29 @@ export function getCountQuery(
   search: string,
   startTime: string | null,
   endTime: string | null
-): { query: string; params: any[] } {
+): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
-  return {
-    query: `SELECT COUNT(*) as count FROM logs ${clause}`,
-    params,
-  };
+  const query = `SELECT COUNT(*) as total FROM logs ${clause}`;
+  
+  return { query, params };
 }
 
 /**
  * Get paginated logs matching criteria
  */
+/**
+ * Get logs query with filters
+ */
 export function getLogsQuery(
-  offset: number,
-  limit: number,
   levels: string[],
   modules: string[],
   search: string,
   startTime: string | null,
-  endTime: string | null
-): { query: string; params: any[] } {
+  endTime: string | null,
+  offset: number,
+  limit: number
+): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
   const query = `
@@ -133,7 +135,7 @@ export function getLogsQuery(
 export function getLevelDistributionQuery(
   startTime: string | null,
   endTime: string | null
-): { query: string; params: any[] } {
+): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause([], [], '', startTime, endTime);
   
   const query = `
@@ -155,7 +157,7 @@ export function getLevelDistributionQuery(
 export function getModuleDistributionQuery(
   startTime: string | null,
   endTime: string | null
-): { query: string; params: any[] } {
+): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause([], [], '', startTime, endTime);
   
   const query = `
@@ -178,7 +180,7 @@ export function getTimeSeriesQuery(
   interval: string,
   startTime: string | null,
   endTime: string | null
-): { query: string; params: any[] } {
+): { query: string; params: (string | number)[] } {
   // Convert interval string to MySQL DATE_FORMAT pattern
   let dateFormat: string;
   switch (interval) {
@@ -224,7 +226,7 @@ export function getInsertLogQuery(log: {
   message: string;
   traceId: string;
   details: object | null;
-}): { query: string; params: any[] } {
+}): { query: string; params: (string | object | null)[] } {
   const query = `
     INSERT INTO infra_module_logs (id, timestamp, module, level, message, trace_id, details, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
@@ -247,7 +249,7 @@ export function getInsertLogQuery(log: {
 /**
  * Get total count of all logs
  */
-export function getTotalCountQuery(): { query: string; params: any[] } {
+export function getTotalCountQuery(): { query: string; params: (string | number)[] } {
   return {
     query: 'SELECT COUNT(*) as count FROM logs',
     params: [],

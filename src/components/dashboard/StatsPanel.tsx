@@ -6,11 +6,11 @@ import { useMemo } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { getColorClass } from '@/utils/colorUtils';
 import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
-import { CalculatedStats, DistributionItem } from '@/types';
+import type { CalculatedStats, DistributionItem, LogEntry } from '@/types';
 import { BarChart3, TrendingUp, ChevronUp } from 'lucide-react';
 
 interface StatsPanelProps {
-  filteredLogs: any[]; // Pass filtered logs as a prop
+  filteredLogs: LogEntry[]; // Pass filtered logs as a prop
   onClose: () => void;
 }
 

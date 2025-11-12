@@ -9,7 +9,7 @@ const LOG_MODULES = ['VEHICLE_OWNER', 'DIAGNOSIS_PLATFORM', 'SOVD_CLIENT', 'HMI'
  */
 export function generateMockLog(): LogEntry {
   const level = LOG_LEVELS[Math.floor(Math.random() * LOG_LEVELS.length)];
-  const module = LOG_MODULES[Math.floor(Math.random() * LOG_MODULES.length)] as any;
+  const module = LOG_MODULES[Math.floor(Math.random() * LOG_MODULES.length)] as LogEntry['module'];
   const traceId = Math.random().toString(36).substring(2, 9).toUpperCase();
 
   let message = `Request processed successfully in ${module}.`;

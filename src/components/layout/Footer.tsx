@@ -2,10 +2,11 @@
 
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
+import type { LogState } from '@/store/logStore';
 import { BACKEND_URL } from '@/constants/logConstants';
 
 // Memoized selector to avoid infinite loops
-const selectViewMode = (state: any) => state.viewMode;
+const selectViewMode = (state: LogState) => state.viewMode;
 
 export const Footer = () => {
   const { t } = useI18n();

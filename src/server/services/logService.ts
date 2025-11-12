@@ -3,6 +3,7 @@ import { generateMockLogs, calculateMockStats } from './mockService';
 import { executeQuery, executeQueryOne, isConnected } from '@/server/db/client';
 import {
   rowToLogEntry,
+  type LogRow,
   getLogsQuery,
   getCountQuery,
   getLevelDistributionQuery,
@@ -97,13 +98,13 @@ class LogService {
     params: GetLogsParams
   ): Promise<GetLogsResponse> {
     const logsQueryData = getLogsQuery(
-      params.offset,
-      params.limit,
       params.levels,
       params.modules,
       params.search,
       params.startTime,
-      params.endTime
+      params.endTime,
+      params.offset,
+      params.limit
     );
 
     const countQueryData = getCountQuery(
@@ -115,7 +116,7 @@ class LogService {
     );
 
     const [logs, totalResults] = await Promise.all([
-      executeQuery<any>(logsQueryData.query, logsQueryData.params),
+      executeQuery<LogRow>(logsQueryData.query, logsQueryData.params),
       executeQueryOne<{ count: number }>(
         countQueryData.query,
         countQueryData.params
@@ -157,9 +158,9 @@ class LogService {
           totalCountQuery.query,
           totalCountQuery.params
         ),
-        executeQuery<any>(levelDistQuery.query, levelDistQuery.params),
-        executeQuery<any>(moduleDistQuery.query, moduleDistQuery.params),
-        executeQuery<any>(timeSeriesQuery.query, timeSeriesQuery.params),
+        executeQuery<{ level: string; count: number }>(levelDistQuery.query, levelDistQuery.params),
+        executeQuery<{ module: string; count: number }>(moduleDistQuery.query, moduleDistQuery.params),
+        executeQuery<{ timestamp: string; count: number }>(timeSeriesQuery.query, timeSeriesQuery.params),
       ]);
 
     const totalLogs = totalResult?.count || 0;
@@ -169,7 +170,7 @@ class LogService {
       string,
       { count: number; percentage: number }
     > = {};
-    (levelDistResults || []).forEach((row: any) => {
+    (levelDistResults || []).forEach((row) => {
       levelDistribution[row.level] = {
         count: row.count,
         percentage: totalLogs > 0 ? (row.count / totalLogs) * 100 : 0,
@@ -181,7 +182,7 @@ class LogService {
       string,
       { count: number; percentage: number }
     > = {};
-    (moduleDistResults || []).forEach((row: any) => {
+    (moduleDistResults || []).forEach((row) => {
       moduleDistribution[row.module] = {
         count: row.count,
         percentage: totalLogs > 0 ? (row.count / totalLogs) * 100 : 0,
@@ -189,8 +190,8 @@ class LogService {
     });
 
     // Convert time series results
-    const timeSeries = (timeSeriesResults || []).map((row: any) => ({
-      timestamp: row.time_bucket,
+    const timeSeries = (timeSeriesResults || []).map((row) => ({
+      timestamp: row.timestamp,
       count: row.count,
     }));
 

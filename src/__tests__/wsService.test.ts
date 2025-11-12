@@ -3,8 +3,9 @@
  * Tests client session management, log broadcasting, and filtering logic
  */
 
-import { WebSocket, Server } from 'ws'
+import type { WebSocket, Server } from 'ws'
 import { EventEmitter } from 'events'
+import { LogEntry } from '@/types'
 
 // Define interfaces for our mocks
 interface MockWebSocket extends WebSocket {
@@ -37,19 +38,17 @@ import { getWSService } from '@/server/services/wsService'
 describe('WSService - WebSocket Server Service', () => {
   let wsService: ReturnType<typeof getWSService>
   let mockWss: MockServer
-  let mockClient: MockWebSocket
 
   beforeEach(() => {
     // Get fresh instance
     wsService = getWSService()
 
     // Create mock WebSocket server
-    mockWss = new Server({ noServer: true }) as unknown as MockServer
-    mockWss.clients = new Set()
-
-    // Create mock client
-    mockClient = new WebSocket('ws://localhost:3000') as unknown as MockWebSocket
-    mockClient.send = jest.fn()
+    mockWss = {
+      clients: new Set(),
+      on: jest.fn().mockReturnThis(),
+      off: jest.fn().mockReturnThis(),
+    } as unknown as MockServer
   })
 
   afterEach(() => {
@@ -171,7 +170,7 @@ describe('WSService - WebSocket Server Service', () => {
         searchText: '',
       }
 
-      const matches = (wsService as any).matchesFilters(log, filters)
+      const matches = (wsService as unknown as { matchesFilters: (log: unknown, filters: unknown) => boolean }).matchesFilters(log, filters)
       expect(matches).toBe(false)
     })
 
@@ -266,7 +265,7 @@ describe('WSService - WebSocket Server Service', () => {
         searchText: '',
       }
 
-      const matchesNo = (wsService as any).matchesFilters(log, filtersNoMatch)
+      const matchesNo = (wsService as unknown as { matchesFilters: (log: LogEntry, filters: unknown) => boolean }).matchesFilters(log, filtersNoMatch)
       expect(matchesNo).toBe(false)
     })
   })

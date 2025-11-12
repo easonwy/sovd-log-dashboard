@@ -3,6 +3,7 @@
 import React from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
+import type { LogState } from '@/store/logStore';
 import {
   LogOut,
   List,
@@ -21,13 +22,13 @@ interface HeaderProps {
 }
 
 // Memoized selectors to avoid infinite loops
-const selectFilters = (state: any) => state.filters;
-const selectSetSearchText = (state: any) => state.setSearchText;
-const selectViewMode = (state: any) => state.viewMode;
-const selectSetViewMode = (state: any) => state.setViewMode;
-const selectIsPaused = (state: any) => state.isPaused;
-const selectTogglePause = (state: any) => state.togglePause;
-const selectIsConnected = (state: any) => state.isConnected;
+const selectFilters = (state: LogState) => state.filters;
+const selectSetSearchText = (state: LogState) => state.setSearchText;
+const selectViewMode = (state: LogState) => state.viewMode;
+const selectSetViewMode = (state: LogState) => state.setViewMode;
+const selectIsPaused = (state: LogState) => state.isPaused;
+const selectTogglePause = (state: LogState) => state.togglePause;
+const selectIsConnected = (state: LogState) => state.isConnected;
 
 export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
   const { t, language, setLanguage } = useI18n();

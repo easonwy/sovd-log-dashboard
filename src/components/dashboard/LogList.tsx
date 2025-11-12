@@ -4,6 +4,7 @@
 
 import { useRef, useEffect } from 'react';
 import { useLogStore } from '@/store/logStore';
+import type { LogState } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
 import { LogEntry } from '@/types';
 import { List } from 'lucide-react';
@@ -14,11 +15,11 @@ interface LogListProps {
 }
 
 // Memoized selectors to avoid infinite loops
-const selectSelectedLog = (state: any) => state.selectedLog;
-const selectSetSelectedLog = (state: any) => state.setSelectedLog;
-const selectIsPaused = (state: any) => state.isPaused;
-const selectViewMode = (state: any) => state.viewMode;
-const selectIsLoading = (state: any) => state.isLoading;
+const selectSelectedLog = (state: LogState) => state.selectedLog;
+const selectSetSelectedLog = (state: LogState) => state.setSelectedLog;
+const selectIsPaused = (state: LogState) => state.isPaused;
+const selectViewMode = (state: LogState) => state.viewMode;
+const selectIsLoading = (state: LogState) => state.isLoading;
 
 export const LogList = ({ filteredLogs }: LogListProps) => {
   const { t } = useI18n();

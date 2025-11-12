@@ -1,3 +1,5 @@
+# SOVD Log Dashboard - Requirements
+
 ## 🛠️ 开发任务清单
 
 ### I. 前端架构与基础 (FE Architecture)
@@ -60,19 +62,19 @@
 | BE-604 | **统计聚合 API**：实现按时间、模块、级别进行**实时聚合**的接口，用于统计面板。 | Database Aggregation Functions             | 高         |
 | BE-605 | **导出任务服务**：实现**后台异步导出**服务，处理大量日志导出请求（CSV/JSON）。 | Background Worker (e.g., Celery, RabbitMQ) | 中         |
 
-# VI. 后端 API 与服务 (BE/Service Layer) 规划 (MySQL 版本)
+## VI. 后端 API 与服务 (BE/Service Layer) 规划 (MySQL 版本)
 
-## 1. 架构概览
+### 1. 架构概览
 
 我们将采用 **Node.js** 作为后端服务运行时，并使用 **Express** 框架搭建 RESTful API 和 **WebSocket** 库提供实时日志流。
 
 - **数据流:** 日志生成器 (Mock/Actual) -> Node.js 服务 -> MySQL (持久化) / WebSocket (实时推送) -> React 前端。
 
-## 2. 持久化 (Persistence) - MySQL (BE-601)
+### 2. 持久化 (Persistence) - MySQL (BE-601)
 
 我们将使用 **MySQL** 作为日志数据库。由于日志详情 (`details`) 字段需要存储灵活的 JSON 结构，我们将利用 MySQL 5.7 及更高版本提供的 `JSON` 数据类型。
 
-### 日志表 (`logs`) 架构
+#### 日志表 (`logs`) 架构
 
 | 字段名 (Column) | 数据类型 (Data Type) | 约束 (Constraints)  | 描述 (Description)                                 |
 | --------------- | -------------------- | ------------------- | -------------------------------------------------- |
@@ -92,9 +94,9 @@
 - `CREATE INDEX idx_logs_module ON logs (module);`
 - `CREATE INDEX idx_logs_trace_id ON logs (trace_id);`
 
-## 3. 后端 API 设计 (BE-602)
+### 3. 后端 API 设计 (BE-602)
 
-### A. RESTful API (用于历史查询和统计)
+#### A. RESTful API (用于历史查询和统计)
 
 | HTTP 方法 | 路径 (Path)         | 描述 (Description)                          | 查询参数 (Query Params)                        |
 | --------- | ------------------- | ------------------------------------------- | ---------------------------------------------- |
@@ -102,7 +104,7 @@
 | `GET`     | `/api/v1/stats`     | 获取日志分布和速率统计。                    | `startTime`, `endTime`, `interval`             |
 | `GET`     | `/api/v1/trace/:id` | 根据 `trace_id` 获取完整的请求/事务日志链。 | N/A                                            |
 
-### B. 实时日志流 (Real-Time Stream) - WebSocket (BE-603)
+#### B. 实时日志流 (Real-Time Stream) - WebSocket (BE-603)
 
 - **端点:** `ws://<server_url>/ws/logs`
 - **功能:**
@@ -110,7 +112,7 @@
     2. 客户端可以发送初始筛选条件 (e.g., `{ "levels": ["ERROR", "WARN"] }`)，服务器仅推送符合条件的实时日志。
     3. 前端的**暂停/恢复**功能将控制 WebSocket 连接上的数据消费，而不是断开连接。
 
-## 4. Node.js 服务端实现 (log_producer_service.ts)
+### 4. Node.js 服务端实现 (log_producer_service.ts)
 
 以下是 Node.js 服务的代码骨架。
 
@@ -391,5 +393,7 @@ httpServer.listen(PORT, () => {
     console.log(`[API] 历史日志查询 API: http://localhost:${PORT}/api/v1/logs`);
     startLogStream();
 });
+});
 // 您可以在本地 Node.js 环境中运行此服务骨架。
+
 ```

@@ -5,12 +5,13 @@
 import { useMemo } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';
-import { TimeBin } from '@/types';
+import type { LogState } from '@/store/logStore';
+import type { TimeBin } from '@/types';
 import { Clock } from 'lucide-react';
 
 // Memoized selectors to avoid infinite loops
-const selectLogs = (state: any) => state.logs;
-const selectViewMode = (state: any) => state.viewMode;
+const selectLogs = (state: LogState) => state.logs;
+const selectViewMode = (state: LogState) => state.viewMode;
 
 export const TimeHistogram = () => {
   const { t, language } = useI18n();
@@ -33,7 +34,7 @@ export const TimeHistogram = () => {
 
     let currentMax = 0;
     
-    logs.forEach((log: any) => {
+    logs.forEach((log) => {
       try {
         const logTime = new Date(log.timestamp).getTime(); 
         if (logTime >= startTime) {
