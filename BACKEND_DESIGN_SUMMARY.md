@@ -105,7 +105,7 @@ CREATE TABLE logs (
   message TEXT NOT NULL,
   trace_id VARCHAR(20),
   details JSON,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   
   INDEX idx_timestamp (timestamp DESC),
   INDEX idx_level (level),

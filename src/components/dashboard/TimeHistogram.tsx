@@ -21,6 +21,8 @@ export const TimeHistogram = () => {
   const { bins, maxCount } = useMemo(() => {
     if (viewMode !== 'STREAM') return { bins: [], maxCount: 0 };
     
+    const getLocale = () => (language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US');
+    
     const intervalMs = 60 * 1000;
     const now = Date.now();
     const startTime = now - intervalMs;
@@ -30,6 +32,7 @@ export const TimeHistogram = () => {
     const bins: TimeBin[] = Array(numBins).fill(0).map((_, i) => ({
       timestamp: startTime + i * binSizeMs,
       count: 0,
+      formattedTime: '',
     }));
 
     let currentMax = 0;
@@ -49,12 +52,24 @@ export const TimeHistogram = () => {
       }
     });
 
+    // Format timestamps once inside useMemo to ensure consistency
+    bins.forEach((bin) => {
+      try {
+        bin.formattedTime = new Date(bin.timestamp).toLocaleTimeString(getLocale(), {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        });
+      } catch {
+        bin.formattedTime = t('invalidTime');
+      }
+    });
+
     return { bins, maxCount: currentMax };
-  }, [logs, viewMode]);
+  }, [logs, viewMode, language, t]);
 
   if (viewMode !== 'STREAM') return null;
-
-  const getLocale = () => (language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US');
 
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 p-3 border-b border-t dark:border-gray-700 shrink-0">
@@ -73,7 +88,8 @@ export const TimeHistogram = () => {
               key={index} 
               className="flex-1 bg-indigo-300 hover:bg-indigo-500 transition-colors"
               style={{ height: `${heightPercent}%` }}
-              title={`Time: ${new Date(bin.timestamp).toLocaleTimeString(getLocale())} | Logs: ${bin.count}`}
+              title={`Time: ${bin.formattedTime} | Logs: ${bin.count}`}
+              suppressHydrationWarning
             ></div>
           );
         })}

@@ -132,7 +132,7 @@ npm run dev:watch
 ```bash
 # Insert a test log directly into database
 mysql -u root -p log_dashboard -e "
-INSERT INTO logs (id, timestamp, module, level, message, trace_id, details, created_at)
+INSERT INTO logs (id, timestamp, module, level, message, trace_id, details, create_time)
 VALUES (UUID(), NOW(3), 'AUTH', 'ERROR', 'Test error message', 'trace-123', NULL, NOW());
 "
 

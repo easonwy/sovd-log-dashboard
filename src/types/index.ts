@@ -33,4 +33,5 @@ export interface CalculatedStats {
 export interface TimeBin {
   timestamp: number;
   count: number;
+  formattedTime?: string;
 }

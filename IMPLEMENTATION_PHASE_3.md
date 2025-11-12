@@ -476,7 +476,7 @@ node server.js  # Watch console output
 
 # 2. Insert test logs
 mysql log_dashboard << EOF
-INSERT INTO logs (id, timestamp, module, level, message, trace_id, details, created_at)
+INSERT INTO logs (id, timestamp, module, level, message, trace_id, details, create_time)
 VALUES ('test-001', NOW(3), 'AUTH', 'ERROR', 'Test error', 'trace-001', '{}', NOW());
 EOF
 

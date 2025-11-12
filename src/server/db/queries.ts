@@ -15,7 +15,7 @@ export interface LogRow {
   message: string;
   trace_id: string | null;
   details: string | null;
-  created_at: string;
+  create_time: string;
 }
 
 /**
@@ -116,7 +116,7 @@ export function getLogsQuery(
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
   const query = `
-    SELECT id, timestamp, module, level, message, trace_id, details, created_at
+    SELECT id, timestamp, module, level, message, trace_id, details, create_time
     FROM infra_module_logs
     ${clause}
     ORDER BY timestamp DESC
@@ -228,7 +228,7 @@ export function getInsertLogQuery(log: {
   details: object | null;
 }): { query: string; params: (string | object | null)[] } {
   const query = `
-    INSERT INTO infra_module_logs (id, timestamp, module, level, message, trace_id, details, created_at)
+    INSERT INTO infra_module_logs (id, timestamp, module, level, message, trace_id, details, create_time)
     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
   `.trim();
 

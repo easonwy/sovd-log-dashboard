@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { LogEntry } from '@/types';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -14,20 +14,18 @@ interface LogItemProps {
 
 const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
   const { t, language } = useI18n();
-  const [timeString, setTimeString] = useState<string>('');
 
-  useEffect(() => {
+  const timeString = useMemo(() => {
     try {
       const locale = language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US';
-      const formatted = new Date(log.timestamp).toLocaleTimeString(locale, {
+      return new Date(log.timestamp).toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         hour12: false,
       });
-      setTimeString(formatted);
     } catch {
-      setTimeString(t('invalidTime'));
+      return t('invalidTime');
     }
   }, [log.timestamp, language, t]);
 
@@ -48,7 +46,7 @@ const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
       className={`flex items-center text-xs transition-colors duration-100 px-4 cursor-pointer h-9 border-b border-gray-100 dark:border-gray-700 ${isSelected ? 'bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
       onClick={() => onSelect(log)}
     >
-      <div className="w-24 font-mono text-gray-500 dark:text-gray-400 shrink-0">
+      <div className="w-24 font-mono text-gray-500 dark:text-gray-400 shrink-0"  suppressHydrationWarning>
         {timeString}
       </div>
       <div className={`w-16 font-semibold rounded-full px-2 py-0.5 text-center shrink-0 border ${levelClasses}`}>
@@ -60,7 +58,7 @@ const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
       <div className="flex-grow text-gray-800 dark:text-gray-200 font-mono text-xs truncate ml-4">
         {log.message}
       </div>
-      <div className="w-20 text-gray-400 dark:text-gray-500 text-[10px] shrink-0 text-right">
+      <div className="w-20 text-gray-400 dark:text-gray-500 text-[10px] shrink-0 text-right"  suppressHydrationWarning>
         {log.traceId}
       </div>
     </div>
