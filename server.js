@@ -94,6 +94,37 @@ app.prepare().then(() => {
   }
   wsService.initialize(wss);
 
+  // Start log stream monitor to broadcast new database entries
+  let logStreamMonitor = null;
+  try {
+    // Try to load from .next build output first
+    try {
+      const { getLogStreamMonitor } = require('./.next/server/src/server/services/logStreamMonitor.js');
+      logStreamMonitor = getLogStreamMonitor();
+      console.log('[LogStreamMonitor] Loaded from build output');
+    } catch (buildError) {
+      // Fall back to source TypeScript
+      if (dev) {
+        const { getLogStreamMonitor } = require('./src/server/services/logStreamMonitor.ts');
+        logStreamMonitor = getLogStreamMonitor();
+        console.log('[LogStreamMonitor] Loaded from TypeScript source');
+      } else {
+        throw buildError;
+      }
+    }
+    
+    // Start monitor with a slight delay to ensure server is fully ready
+    setTimeout(() => {
+      if (logStreamMonitor) {
+        logStreamMonitor.start();
+        console.log('[LogStreamMonitor] Started after server initialization');
+      }
+    }, 1000);
+  } catch (error) {
+    console.warn('[LogStreamMonitor] Could not load monitor:', error.message);
+    console.log('[LogStreamMonitor] WebSocket will use historical queries only');
+  }
+
   // Handle WebSocket upgrade requests
   server.on('upgrade', (req, socket, head) => {
     // Only upgrade if the path is /api/ws
@@ -111,7 +142,6 @@ app.prepare().then(() => {
       }
     } else {
       // Not a WebSocket request we care about
-      console.log('[WebSocket] Ignoring upgrade request to', req.url);
       socket.destroy();
     }
   });
@@ -119,6 +149,11 @@ app.prepare().then(() => {
   // Handle server shutdown gracefully
   process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully...');
+    
+    // Stop log stream monitor
+    if (logStreamMonitor) {
+      logStreamMonitor.stop();
+    }
     
     // Close WebSocket connections
     wsService.shutdown();

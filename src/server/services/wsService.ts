@@ -86,14 +86,23 @@ export class WSService {
       this.setupClientHandlers(ws, session);
 
       // Send initial welcome message
-      this.send(ws, {
-        type: 'heartbeat',
-        payload: {
-          message: 'Connected to log stream',
-          clientId,
-          timestamp: Date.now(),
-        },
-      });
+      try {
+        this.send(ws, {
+          type: 'heartbeat',
+          payload: {
+            message: 'Connected to log stream',
+            clientId,
+            timestamp: Date.now(),
+          },
+        });
+      } catch (error) {
+        console.error(`[WS] Failed to send welcome message to ${clientId}:`, error);
+      }
+    });
+
+    // Handle any errors on the WebSocket server itself
+    this.wss.on('error', (error: Error) => {
+      console.error('[WS] WebSocket server error:', error);
     });
   }
 
@@ -107,15 +116,17 @@ export class WSService {
         this.handleClientMessage(ws, session, message);
       } catch (error) {
         console.error(`[WS] Failed to parse message from ${session.id}:`, error);
+        // Don't close connection on parse errors - just log and continue
       }
     });
 
     ws.on('error', (error: Error) => {
-      console.error(`[WS] Error from client ${session.id}:`, error);
+      console.error(`[WS] Error from client ${session.id}:`, error.message);
+      // Client error handler - don't throw, just log
     });
 
-    ws.on('close', () => {
-      console.log(`[WS] Client disconnected: ${session.id}`);
+    ws.on('close', (code: number, reason: string) => {
+      console.log(`[WS] Client disconnected: ${session.id} (code: ${code}, reason: ${reason})`);
       this.clients.delete(ws);
     });
 
