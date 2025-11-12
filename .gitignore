@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Next.js
+.next/
+out/
+.env.local
+.env.*.local
+
+# Vite (legacy - no longer used)
+dist-ssr/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

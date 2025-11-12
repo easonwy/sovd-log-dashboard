@@ -1,5 +1,7 @@
 // src/components/dashboard/TimeHistogram.tsx
 
+'use client';
+
 import { useMemo } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';

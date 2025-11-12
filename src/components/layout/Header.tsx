@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/I18nProvider';

@@ -1,14 +1,6 @@
 import { LogEntry } from '@/types';
 
 /**
- * The base URL for the backend API.
- * It attempts to read from environment variables, falling back to a default for local development.
- * Make sure to create a `.env.local` file with `VITE_BACKEND_URL=http://your-backend-url`.
- */
-// If backend is not running or accessible, this will cause connection failures
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-
-/**
  * The maximum number of log entries to keep in the client-side buffer for stream mode.
  * This helps manage memory usage and maintain performance.
  */
@@ -40,3 +32,10 @@ export const LOG_MODULES: LogEntry['module'][] = [
   'PRIVATE_SERVER',
   'SOVD_GATEWAY',
 ];
+
+/**
+ * Backend URL for API requests
+ */
+export const BACKEND_URL = typeof window !== 'undefined'
+  ? process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000'
+  : 'http://localhost:3000';

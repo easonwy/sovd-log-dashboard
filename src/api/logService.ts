@@ -1,24 +1,39 @@
-import { BACKEND_URL, LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
+import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import { LogFilters, LogEntry } from '@/types';
-import { generateDemoLogs } from './mockData'; // Import from our new mock file
+import { generateDemoLogs } from './mockData';
 
 export interface HistoryResponse {
   logs: LogEntry[];
   total: number;
 }
 
-// A flag to force mock mode via .env.local file (VITE_FORCE_MOCK_API=true)
-const FORCE_MOCK = import.meta.env.VITE_FORCE_MOCK_API === 'true';
+interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  error: {
+    code: string;
+    message: string;
+    details?: string;
+  } | null;
+}
+
+// Get backend URL from environment or default to current host
+const BACKEND_URL = typeof window !== 'undefined' 
+  ? process.env.NEXT_PUBLIC_BACKEND_URL || `${window.location.origin}`
+  : process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+
+// A flag to force mock mode via .env file (NEXT_PUBLIC_FORCE_MOCK_API=true)
+const FORCE_MOCK = process.env.NEXT_PUBLIC_FORCE_MOCK_API === 'true';
 
 const getMockHistory = (offset: number, limit: number): HistoryResponse => {
-    console.warn("Serving MOCK data for historical logs.");
-    const allMockLogs = generateDemoLogs();
-    const paginatedLogs = allMockLogs.slice(offset, offset + limit);
-    return {
-        logs: paginatedLogs,
-        total: allMockLogs.length,
-    };
-}
+  console.warn('Serving MOCK data for historical logs.');
+  const allMockLogs = generateDemoLogs();
+  const paginatedLogs = allMockLogs.slice(offset, offset + limit);
+  return {
+    logs: paginatedLogs,
+    total: allMockLogs.length,
+  };
+};
 
 export const fetchHistoricalLogs = async (
   offset: number,
@@ -30,16 +45,16 @@ export const fetchHistoricalLogs = async (
   }
 
   const queryParams = new URLSearchParams();
-  
+
   // Build query parameters properly
-  const activeLevels = LOG_LEVELS.filter(l => filters.levels[l]).join(',');
+  const activeLevels = LOG_LEVELS.filter((l) => filters.levels[l]).join(',');
   if (activeLevels) queryParams.append('levels', activeLevels);
-  
-  const activeModules = LOG_MODULES.filter(m => filters.modules[m]).join(',');
+
+  const activeModules = LOG_MODULES.filter((m) => filters.modules[m]).join(',');
   if (activeModules) queryParams.append('modules', activeModules);
-  
+
   if (filters.searchText) queryParams.append('search', filters.searchText);
-  
+
   queryParams.append('offset', offset.toString());
   queryParams.append('limit', limit.toString());
 
@@ -48,13 +63,19 @@ export const fetchHistoricalLogs = async (
     if (!response.ok) {
       throw new Error(`HTTP Error! Status: ${response.status}`);
     }
-    const data: HistoryResponse = await response.json();
+
+    const apiData: ApiResponse<HistoryResponse> = await response.json();
+
+    if (!apiData.success) {
+      throw new Error(apiData.error?.message || 'API returned error');
+    }
+
     return {
-      logs: data.logs || [],
-      total: data.total || 0,
+      logs: apiData.data?.logs || [],
+      total: apiData.data?.total || 0,
     };
   } catch (error) {
-    console.error("Real API fetch failed, falling back to mock data.", error);
+    console.error('Real API fetch failed, falling back to mock data.', error);
     return getMockHistory(offset, limit);
   }
 };

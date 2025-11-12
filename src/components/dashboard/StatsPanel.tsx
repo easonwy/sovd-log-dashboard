@@ -1,5 +1,7 @@
 // src/components/dashboard/StatsPanel.tsx
 
+'use client';
+
 import { useMemo } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { getColorClass } from '@/utils/colorUtils';

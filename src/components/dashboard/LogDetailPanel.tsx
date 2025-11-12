@@ -1,5 +1,7 @@
 // src/components/dashboard/LogDetailPanel.tsx
 
+'use client';
+
 import { useMemo } from 'react';
 import { LogEntry } from '@/types';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -38,7 +40,7 @@ export const LogDetailPanel = ({ log, onClose }: LogDetailPanelProps) => {
     if (!log.details) return null;
     try {
       return JSON.stringify(log.details, null, 2);
-    } catch (e) {
+    } catch {
       return JSON.stringify({ error: t('detailsParseError') }, null, 2);
     }
   }, [log.details, t]);

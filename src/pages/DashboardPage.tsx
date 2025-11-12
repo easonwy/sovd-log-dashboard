@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useMemo } from 'react';
 import { useLogStream } from '@/hooks/useLogStream';
 import { useLogStore } from '@/store/logStore';
