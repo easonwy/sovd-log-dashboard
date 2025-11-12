@@ -5,7 +5,7 @@
 import { useRef, useEffect } from 'react';
 import { useLogStore } from '@/store/logStore';
 import type { LogState } from '@/store/logStore';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 import { LogEntry } from '@/types';
 import { List } from 'lucide-react';
 import LogItem from './LogItem'; // Using default export

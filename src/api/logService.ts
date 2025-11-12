@@ -55,6 +55,10 @@ export const fetchHistoricalLogs = async (
 
   if (filters.searchText) queryParams.append('search', filters.searchText);
 
+  // Add time range parameters if specified
+  if (filters.startTime) queryParams.append('startTime', filters.startTime);
+  if (filters.endTime) queryParams.append('endTime', filters.endTime);
+
   queryParams.append('offset', offset.toString());
   queryParams.append('limit', limit.toString());
 

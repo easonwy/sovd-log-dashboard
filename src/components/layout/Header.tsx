@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useLogStore } from '@/store/logStore';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 import type { LogState } from '@/store/logStore';
 import {
   LogOut,
@@ -47,7 +47,7 @@ export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
   };
 
   const switchToHistoryMode = () => {
-    setViewMode('HISTORY', true); // Switch mode and clear logs
+    setViewMode('HISTORY'); // Switch mode and clear logs
     // Load history will be triggered by the useEffect in useLogStream
   };
 

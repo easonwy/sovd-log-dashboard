@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { LogEntry } from '@/types';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 import { X, Copy, Zap } from 'lucide-react';
 
 interface LogDetailPanelProps {

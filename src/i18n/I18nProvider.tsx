@@ -1,18 +1,7 @@
-import { createContext, useState, useCallback, useContext, ReactNode } from 'react';
+import { useState, useCallback, ReactNode } from 'react';
 import { Language } from '@/types';
+import { I18nContext } from './I18nContext';
 import { translations } from './translations';
-
-/**
- * Defines the shape of the context that will be provided to components.
- */
-interface I18nContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
-}
-
-// Create the context with an initial undefined value.
-const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 /**
  * The provider component that wraps the application.
@@ -39,17 +28,4 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </I18nContext.Provider>
   );
-};
-
-/**
- * A custom hook to consume the i18n context.
- * It provides a safe way to access the context, throwing an error
- * if it's used outside of an I18nProvider.
- */
-export const useI18n = () => {
-  const context = useContext(I18nContext);
-  if (context === undefined) {
-    throw new Error('useI18n must be used within an I18nProvider');
-  }
-  return context;
 };

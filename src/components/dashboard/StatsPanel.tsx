@@ -3,7 +3,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 import { getColorClass } from '@/utils/colorUtils';
 import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import type { CalculatedStats, DistributionItem, LogEntry } from '@/types';

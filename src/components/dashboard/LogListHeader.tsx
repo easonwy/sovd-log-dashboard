@@ -2,7 +2,7 @@
 
 import { useLogStore } from '@/store/logStore';
 import type { LogState } from '@/store/logStore';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 import { MAX_LOG_COUNT, PAGE_SIZE } from '@/constants/logConstants';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 

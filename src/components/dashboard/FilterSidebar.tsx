@@ -4,7 +4,7 @@
 
 import { useState, useMemo } from 'react';
 import { useLogStore } from '@/store/logStore';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 import { getInitialFilters } from '@/utils/logUtils';
 import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import { Filter, ChevronDown, ChevronUp, Database } from 'lucide-react';
@@ -19,7 +19,9 @@ const selectLogs = (state: { logs: LogEntry[] }) => state.logs;
 
 export const FilterSidebar = () => {
   const { t } = useI18n();
-  const [openSection, setOpenSection] = useState<'levels' | 'modules'>('levels');
+  const [openSection, setOpenSection] = useState<'levels' | 'modules' | 'timeRange'>('levels');
+  const [startTime, setStartTime] = useState<string>('');
+  const [endTime, setEndTime] = useState<string>('');
 
   const filters = useLogStore(selectFilters);
   const setFilters = useLogStore(selectSetFilters);
@@ -61,7 +63,27 @@ export const FilterSidebar = () => {
   
   const handleClearFilters = () => {
     setFilters(getInitialFilters());
-  }
+    setStartTime('');
+    setEndTime('');
+  };
+
+  const handleApplyTimeRange = () => {
+    setFilters({
+      ...filters,
+      startTime: startTime ? new Date(startTime).toISOString() : undefined,
+      endTime: endTime ? new Date(endTime).toISOString() : undefined,
+    });
+  };
+
+  const handleClearTimeRange = () => {
+    setStartTime('');
+    setEndTime('');
+    setFilters({
+      ...filters,
+      startTime: undefined,
+      endTime: undefined,
+    });
+  };
 
   const renderFilterGroup = (titleKey: 'logLevels' | 'modules', keys: string[], type: 'levels' | 'modules') => (
     <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -105,6 +127,57 @@ export const FilterSidebar = () => {
 
       {renderFilterGroup('logLevels', LOG_LEVELS, 'levels')}
       {renderFilterGroup('modules', LOG_MODULES, 'modules')}
+      
+      {/* Time Range Filter */}
+      <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3
+          className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex justify-between items-center cursor-pointer"
+          onClick={() => setOpenSection(openSection === 'timeRange' ? 'levels' : 'timeRange')}
+        >
+          {t('timeRange')}
+          {openSection === 'timeRange' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </h3>
+        <div className={openSection === 'timeRange' ? 'block' : 'hidden'}>
+          <div className="space-y-2">
+            <div>
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 block mb-1">
+                {t('startTime')}
+              </label>
+              <input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 block mb-1">
+                {t('endTime')}
+              </label>
+              <input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleApplyTimeRange}
+                className="flex-1 py-1 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors"
+              >
+                {t('apply')}
+              </button>
+              <button
+                onClick={handleClearTimeRange}
+                className="flex-1 py-1 text-xs font-semibold text-gray-600 bg-gray-200 dark:bg-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t('clear')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div className="space-y-2 mt-6">
         <button 

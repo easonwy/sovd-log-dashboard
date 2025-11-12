@@ -15,6 +15,8 @@ export interface LogFilters {
   levels: Record<string, boolean>;
   modules: Record<string, boolean>;
   searchText: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface DistributionItem {

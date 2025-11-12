@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 import { LogEntry } from '@/types';
-import { useI18n } from '@/i18n/I18nProvider';
+import { useI18n } from '@/i18n/useI18n';
 
 interface LogItemProps {
   log: LogEntry;
@@ -18,7 +18,12 @@ const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
   const timeString = useMemo(() => {
     try {
       const locale = language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US';
-      return new Date(log.timestamp).toLocaleTimeString(locale, {
+      // Format: Date and time in user's locale
+      
+      return new Date(log.timestamp).toLocaleString(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -46,7 +51,7 @@ const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
       className={`flex items-center text-xs transition-colors duration-100 px-4 cursor-pointer h-9 border-b border-gray-100 dark:border-gray-700 ${isSelected ? 'bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
       onClick={() => onSelect(log)}
     >
-      <div className="w-24 font-mono text-gray-500 dark:text-gray-400 shrink-0"  suppressHydrationWarning>
+      <div className="w-40 font-mono text-gray-500 dark:text-gray-400 shrink-0"  suppressHydrationWarning>
         {timeString}
       </div>
       <div className={`w-16 font-semibold rounded-full px-2 py-0.5 text-center shrink-0 border ${levelClasses}`}>
