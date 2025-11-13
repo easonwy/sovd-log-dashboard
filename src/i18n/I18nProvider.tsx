@@ -8,7 +8,7 @@ import { translations } from './translations';
  * It holds the language state and provides the context value to its children.
  */
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('zh'); // Default language is Chinese
+  const [language, setLanguage] = useState<Language>('en'); // Default language is English
 
   /**
    * The translation function. It looks up a key in the current language's
