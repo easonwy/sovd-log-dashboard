@@ -79,6 +79,10 @@ export const useLogStore = create<LogState>((set, get) => ({
     if (state.isPaused || state.viewMode === 'HISTORY') {
       return {}; // Return empty object to not change state.
     }
+    // Deduplicate by id: skip if this log already exists in the list
+    if (state.logs.some(existing => existing.id === log.id)) {
+      return {};
+    }
     const newLogs = [log, ...state.logs];
     // Enforce the max log count to prevent memory issues.
     return { logs: newLogs.slice(0, MAX_LOG_COUNT) };
