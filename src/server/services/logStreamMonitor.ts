@@ -19,10 +19,9 @@ import eventBus from './eventBus';
  */
 class LogStreamMonitor {
   private monitorIntervalId: NodeJS.Timeout | null = null;
-  // Use create_time as the primary cursor, with id as a tie-breaker
+  // Use create_time as the cursor
   // Initialize 10 minutes back to catch recent manual inserts
   private lastCreateTime: string = LogStreamMonitor.toSqlDateTime(new Date(Date.now() - 10 * 60 * 1000));
-  private lastId: string = '';
   private readonly POLL_INTERVAL = 2000; // Poll every 2 seconds
   private isRunning = false;
 
@@ -86,20 +85,14 @@ class LogStreamMonitor {
       const query = `
         SELECT id, timestamp, module, level, message, trace_id, details, create_time
         FROM infra_module_logs
-        WHERE (create_time > ?) OR (create_time = ? AND id > ?)
-        ORDER BY create_time ASC, id ASC
+        WHERE create_time > ?
+        ORDER BY create_time ASC
         LIMIT 100
       `;
 
-      const params = [this.lastCreateTime, this.lastCreateTime, this.lastId];
+      const params = [this.lastCreateTime];
 
-      // Log the fully formatted SQL for debugging
-      try {
-        const formatted = LogStreamMonitor.formatSql(query, params);
-        console.log('[LogStreamMonitor] Executing SQL:', formatted);
-      } catch {
-        console.log('[LogStreamMonitor] Executing SQL (params):', query, params);
-      }
+      
 
       const rows = await executeQuery<LogRow>(query, params);
 
@@ -108,10 +101,9 @@ class LogStreamMonitor {
       if (rows && rows.length > 0) {
         console.log(`[LogStreamMonitor] Found ${rows.length} new log entries`);
 
-        // Advance the cursor to the latest row's create_time and id
+        // Advance the cursor to the latest row's create_time
         const latestLog = rows[rows.length - 1];
         this.lastCreateTime = latestLog.create_time;
-        this.lastId = latestLog.id;
 
         // Broadcast each new log to connected clients via event bus
         try {
@@ -145,12 +137,10 @@ class LogStreamMonitor {
   public getStatus(): {
     isRunning: boolean;
     lastCreateTime: string;
-    lastId: string;
   } {
     return {
       isRunning: this.isRunning,
       lastCreateTime: this.lastCreateTime,
-      lastId: this.lastId,
     };
   }
 
