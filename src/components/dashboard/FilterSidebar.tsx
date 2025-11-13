@@ -17,7 +17,11 @@ const selectViewMode = (state: { viewMode: 'STREAM' | 'HISTORY' }) => state.view
 const selectSetViewMode = (state: { setViewMode: (mode: 'STREAM' | 'HISTORY') => void }) => state.setViewMode;
 const selectLogs = (state: { logs: LogEntry[] }) => state.logs;
 
-export const FilterSidebar = () => {
+interface FilterSidebarProps {
+  onClose?: () => void;
+}
+
+export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
   const { t } = useI18n();
   const [openSection, setOpenSection] = useState<'levels' | 'modules' | 'timeRange'>('levels');
   const [startTime, setStartTime] = useState<string>('');
@@ -117,8 +121,19 @@ export const FilterSidebar = () => {
 
   return (
     <div className="w-64 p-4 bg-gray-50 dark:bg-gray-900 border-r dark:border-gray-700 overflow-y-auto shrink-0">
-      <div className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
-        <Filter size={18} className="mr-2" /> {t('filter')}
+      <div className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center justify-between">
+        <span className="flex items-center">
+          <Filter size={18} className="mr-2" /> {t('filter')}
+        </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full text-gray-500 hover:bg-gray-400/50 dark:hover:bg-gray-600 transition-colors"
+            title={t('hideFilters')}
+          >
+            <ChevronUp size={16} />
+          </button>
+        )}
       </div>
       
       <div className={`p-3 rounded-lg text-sm mb-4 transition-colors font-semibold border ${viewMode === 'STREAM' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700' : 'bg-gray-200 text-gray-700 border-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'}`}>

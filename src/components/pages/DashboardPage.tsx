@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLogStream } from '@/hooks/useLogStream';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/useI18n';
@@ -38,6 +38,27 @@ export const DashboardPage = () => {
   // UI-specific state that doesn't need to be global.
   const [isStatsVisible, setIsStatsVisible] = useState(true);
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+
+  // Hydrate filter visibility from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('isFiltersVisible');
+      if (saved !== null) {
+        setIsFiltersVisible(saved === 'true');
+      }
+    } catch (err) {
+      console.warn('[Dashboard] Failed to read isFiltersVisible from localStorage', err);
+    }
+  }, []);
+
+  // Persist filter visibility changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('isFiltersVisible', String(isFiltersVisible));
+    } catch (err) {
+      console.warn('[Dashboard] Failed to write isFiltersVisible to localStorage', err);
+    }
+  }, [isFiltersVisible]);
 
   // Select state from the Zustand store using stable selectors.
   // Each selector is defined outside the component to avoid recreation.
@@ -99,7 +120,7 @@ export const DashboardPage = () => {
       )}
 
       <main className="flex flex-1 overflow-hidden">
-        {isFiltersVisible && <FilterSidebar />}
+        {isFiltersVisible && <FilterSidebar onClose={() => setIsFiltersVisible(false)} />}
 
         <div className="flex-1 flex flex-col overflow-hidden">
           {isStatsVisible && (
