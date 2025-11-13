@@ -50,14 +50,14 @@ const mockMessages = [
  */
 export const generateMockStreamLog = (): LogEntry => {
     const level = LOG_LEVELS[Math.floor(Math.random() * LOG_LEVELS.length)];
-    const module = LOG_MODULES[Math.floor(Math.random() * LOG_MODULES.length)];
+    const logModule = LOG_MODULES[Math.floor(Math.random() * LOG_MODULES.length)];
     const message = mockMessages[Math.floor(Math.random() * mockMessages.length)];
 
     return {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         level,
-        module,
+        module: logModule,
         message,
         traceId: `TRACE-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
         details: { mock: true, generatedAt: Date.now() },

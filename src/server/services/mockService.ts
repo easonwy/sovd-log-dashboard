@@ -9,26 +9,26 @@ const LOG_MODULES = ['VEHICLE_OWNER', 'DIAGNOSIS_PLATFORM', 'SOVD_CLIENT', 'HMI'
  */
 export function generateMockLog(): LogEntry {
   const level = LOG_LEVELS[Math.floor(Math.random() * LOG_LEVELS.length)];
-  const module = LOG_MODULES[Math.floor(Math.random() * LOG_MODULES.length)] as LogEntry['module'];
+  const logModule = LOG_MODULES[Math.floor(Math.random() * LOG_MODULES.length)] as LogEntry['module'];
   const traceId = Math.random().toString(36).substring(2, 9).toUpperCase();
 
-  let message = `Request processed successfully in ${module}.`;
+  let message = `Request processed successfully in ${logModule}.`;
   let details: object | null = null;
 
   if (level === 'ERROR' || level === 'WARN') {
     message = level === 'ERROR' 
-      ? `Error in ${module}: Operation failed with HTTP 500.`
-      : `Warning: ${module} detected high load.`;
+      ? `Error in ${logModule}: Operation failed with HTTP 500.`
+      : `Warning: ${logModule} detected high load.`;
     details = {
       errorType: level === 'ERROR' ? 'ServiceError' : 'PerformanceWarning',
-      endpoint: `/api/${module.toLowerCase()}/execute`,
+      endpoint: `/api/${logModule.toLowerCase()}/execute`,
       durationMs: Math.floor(Math.random() * 5000),
     };
     if (level === 'ERROR') {
       details = { ...details, stackTrace: 'Error stack trace...' };
     }
   } else if (level === 'INFO') {
-    message = `User session started in ${module}.`;
+    message = `User session started in ${logModule}.`;
   }
 
   const now = new Date();
@@ -38,7 +38,7 @@ export function generateMockLog(): LogEntry {
   return {
     id: `log-${uuidv4()}`,
     timestamp: timestamp.toISOString(),
-    module,
+    module: logModule,
     level,
     message,
     traceId,

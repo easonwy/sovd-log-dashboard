@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 // Use a global singleton so Next.js (bundled server) and the custom server
 // share the same event bus instance in the same Node.js process.
 declare global {
-  // eslint-disable-next-line no-var
   var __SOVD_EVENT_BUS__: EventEmitter | undefined;
 }
 
