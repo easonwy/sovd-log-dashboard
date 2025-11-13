@@ -92,8 +92,6 @@ class LogStreamMonitor {
 
       const params = [this.lastCreateTime];
 
-      
-
       const rows = await executeQuery<LogRow>(query, params);
 
       console.log(`[LogStreamMonitor] Result count: ${rows ? rows.length : 0}`);
@@ -154,24 +152,6 @@ class LogStreamMonitor {
     const mi = pad(d.getMinutes());
     const ss = pad(d.getSeconds());
     return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
-  }
-
-  // Best-effort SQL formatter that replaces '?' with MySQL-safe literals
-  private static formatSql(sql: string, params: (string | number | null)[]): string {
-    let i = 0;
-    return sql.replace(/\?/g, () => {
-      const p = params[i++];
-      return LogStreamMonitor.toSqlLiteral(p);
-    });
-  }
-
-  private static toSqlLiteral(value: string | number | null): string {
-    if (value === null) return 'NULL';
-    if (typeof value === 'number') return String(value);
-    const s = String(value)
-      .replace(/\\/g, '\\\\')
-      .replace(/'/g, "\\'");
-    return `'${s}'`;
   }
 }
 
