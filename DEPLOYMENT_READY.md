@@ -237,7 +237,6 @@ DB_NAME=log_dashboard          # Database name
 
 # Backend URLs (for frontend)
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
-NEXT_PUBLIC_WS_URL=ws://localhost:3000
 
 # Features (optional)
 NEXT_PUBLIC_FORCE_MOCK_API=false   # Force mock data (for testing)
