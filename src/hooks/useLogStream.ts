@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useLogStore } from '@/store/logStore';
-import { webSocketService } from '@/api/webSocketService';
+import { sseService } from '@/api/sseService';
 
 /**
  * A custom hook to manage the entire lifecycle of the log data stream.
@@ -31,9 +31,11 @@ export const useLogStream = () => {
       
       // 1. Fetch the initial set of logs.
       useLogStore.getState().loadHistory(1);
-      
-      // 2. Establish the WebSocket connection.
-      webSocketService.connect();
+
+      // 2. Establish the SSE connection with current filters when in STREAM mode.
+      if (useLogStore.getState().viewMode === 'STREAM') {
+        sseService.connect(useLogStore.getState().filters);
+      }
     }
 
     // 3. Return a cleanup function that runs when the component unmounts.
@@ -42,30 +44,32 @@ export const useLogStream = () => {
       // In React Strict Mode (development), components mount, unmount, then mount again.
       // Ensure we close any in-flight socket to avoid duplicate connections.
       if (initialized.current) {
-        webSocketService.disconnect();
+        sseService.disconnect();
         initialized.current = false;
       }
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount.
 
   /**
-   * Effect for synchronizing filters with the WebSocket server.
-   * This runs whenever the filters or the view mode change.
+   * Effect for synchronizing stream with current filters and mode.
+   * Reconnects SSE when filters change in STREAM mode; loads history in HISTORY mode.
    */
   useEffect(() => {
-    // We only need to send filters to the WebSocket when in real-time stream mode.
-    // In history mode, filters are applied via REST API requests.
     if (viewMode === 'STREAM') {
-      webSocketService.sendFilters(filters);
+      sseService.reconnect(filters);
+    } else {
+      // In history mode, filters applied via REST
+      useLogStore.getState().loadHistory(1);
+      // Also ensure stream is disconnected
+      sseService.disconnect();
     }
-  }, [filters, viewMode]); // Dependencies: re-run this effect if filters or viewMode change.
+  }, [filters, viewMode]);
   
   /**
    * Effect for loading history when view mode changes.
    * This runs whenever the view mode changes.
    */
   useEffect(() => {
-    // Only load history if we're in HISTORY mode
     if (viewMode === 'HISTORY') {
       useLogStore.getState().loadHistory(1);
     }

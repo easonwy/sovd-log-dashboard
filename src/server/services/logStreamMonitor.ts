@@ -2,7 +2,7 @@
 // The alias '@' is resolved by Next.js, but not by the custom server runtime.
 import { executeQuery, isConnected } from '../db/client';
 import { rowToLogEntry, type LogRow } from '../db/queries';
-import { getWSService } from './wsService';
+import eventBus from './eventBus';
 
 /**
  * Log Stream Monitor Service
@@ -19,7 +19,10 @@ import { getWSService } from './wsService';
  */
 class LogStreamMonitor {
   private monitorIntervalId: NodeJS.Timeout | null = null;
-  private lastTimestamp: string = new Date(Date.now() - 60000).toISOString(); // Start from 1 minute ago
+  // Use create_time as the primary cursor, with id as a tie-breaker
+  // Initialize 10 minutes back to catch recent manual inserts
+  private lastCreateTime: string = LogStreamMonitor.toSqlDateTime(new Date(Date.now() - 10 * 60 * 1000));
+  private lastId: string = '';
   private readonly POLL_INTERVAL = 2000; // Poll every 2 seconds
   private isRunning = false;
 
@@ -83,30 +86,41 @@ class LogStreamMonitor {
       const query = `
         SELECT id, timestamp, module, level, message, trace_id, details, create_time
         FROM infra_module_logs
-        WHERE timestamp > ?
-        ORDER BY timestamp ASC
+        WHERE (create_time > ?) OR (create_time = ? AND id > ?)
+        ORDER BY create_time ASC, id ASC
         LIMIT 100
       `;
 
-      const params = [this.lastTimestamp];
+      const params = [this.lastCreateTime, this.lastCreateTime, this.lastId];
+
+      // Log the fully formatted SQL for debugging
+      try {
+        const formatted = LogStreamMonitor.formatSql(query, params);
+        console.log('[LogStreamMonitor] Executing SQL:', formatted);
+      } catch {
+        console.log('[LogStreamMonitor] Executing SQL (params):', query, params);
+      }
+
       const rows = await executeQuery<LogRow>(query, params);
+
+      console.log(`[LogStreamMonitor] Result count: ${rows ? rows.length : 0}`);
 
       if (rows && rows.length > 0) {
         console.log(`[LogStreamMonitor] Found ${rows.length} new log entries`);
 
-        // Update lastTimestamp to the latest log's timestamp
+        // Advance the cursor to the latest row's create_time and id
         const latestLog = rows[rows.length - 1];
-        this.lastTimestamp = latestLog.timestamp;
+        this.lastCreateTime = latestLog.create_time;
+        this.lastId = latestLog.id;
 
-        // Broadcast each new log to connected clients
+        // Broadcast each new log to connected clients via event bus
         try {
-          const wsService = getWSService();
           let broadcastCount = 0;
           
           rows.forEach((row) => {
             try {
               const logEntry = rowToLogEntry(row);
-              wsService.broadcastLog(logEntry);
+              eventBus.emit('log', logEntry);
               broadcastCount++;
             } catch (error) {
               console.error('[LogStreamMonitor] Error converting row to log entry:', error);
@@ -130,12 +144,44 @@ class LogStreamMonitor {
    */
   public getStatus(): {
     isRunning: boolean;
-    lastTimestamp: string;
+    lastCreateTime: string;
+    lastId: string;
   } {
     return {
       isRunning: this.isRunning,
-      lastTimestamp: this.lastTimestamp,
+      lastCreateTime: this.lastCreateTime,
+      lastId: this.lastId,
     };
+  }
+
+  // Format a JS Date to MySQL DATETIME string (YYYY-MM-DD HH:MM:SS)
+  private static toSqlDateTime(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+  }
+
+  // Best-effort SQL formatter that replaces '?' with MySQL-safe literals
+  private static formatSql(sql: string, params: (string | number | null)[]): string {
+    let i = 0;
+    return sql.replace(/\?/g, () => {
+      const p = params[i++];
+      return LogStreamMonitor.toSqlLiteral(p);
+    });
+  }
+
+  private static toSqlLiteral(value: string | number | null): string {
+    if (value === null) return 'NULL';
+    if (typeof value === 'number') return String(value);
+    const s = String(value)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'");
+    return `'${s}'`;
   }
 }
 

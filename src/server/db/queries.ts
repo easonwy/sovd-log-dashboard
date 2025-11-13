@@ -1,4 +1,6 @@
-import { LogEntry } from '@/types';
+// Use relative import so this module can be required by the custom Node server
+// without relying on path aliases.
+import { LogEntry } from '../../types/index';
 
 /**
  * SQL Query Builders for Log Operations

@@ -1,27 +1,13 @@
 /**
- * Custom Next.js Server with WebSocket Support
+ * Custom Next.js Server (SSE-based streaming)
  *
- * This file provides WebSocket support for Next.js applications.
- * Use this when running Next.js on a self-hosted Node.js server.
- *
- * Setup:
- * 1. Copy this file to the project root (or a custom location)
- * 2. Update package.json scripts:
- *    "dev": "node server.js",
- *    "start": "NODE_ENV=production node server.js"
- * 3. Run: npm run dev
- *
- * For production with pm2:
- *    pm2 start server.js --name "log-dashboard"
- *
- * For Docker:
- *    CMD ["node", "server.js"]
+ * This server runs the Next.js app and starts the LogStreamMonitor.
+ * WebSocket logic has been removed in favor of Server-Sent Events (SSE).
  */
 
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
-const { Server: WebSocketServer } = require('ws');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || 'localhost';
@@ -33,6 +19,28 @@ const handle = app.getRequestHandler();
 
 // Prepare Next.js
 app.prepare().then(() => {
+  // In development, register ts-node so we can require TypeScript sources
+  if (dev) {
+    try {
+      require('ts-node').register({
+        project: './tsconfig.json',
+        transpileOnly: true,
+      });
+      console.log('[Dev] ts-node registered for TypeScript requires');
+    } catch (e) {
+      console.warn('[Dev] ts-node not available; will require built JS only');
+    }
+
+    // Try to register tsconfig-paths so tsconfig "paths" aliases work in dev
+    try {
+      // This auto-loads paths and baseUrl from tsconfig.json
+      require('tsconfig-paths/register');
+      console.log('[Dev] tsconfig-paths registered for alias resolution');
+    } catch (e) {
+      console.warn('[Dev] tsconfig-paths not available; path aliases may not resolve');
+    }
+  }
+
   // Create HTTP server
   const server = createServer((req, res) => {
     try {
@@ -47,52 +55,6 @@ app.prepare().then(() => {
       res.end('Internal server error');
     }
   });
-
-  // Attach WebSocket server
-  const wss = new WebSocketServer({ noServer: true });
-
-  // Initialize WebSocket service
-  // The wsService is loaded from the compiled TypeScript output
-  let wsService;
-  try {
-    // Try to load from TypeScript source using require hook
-    // Register ts-node if available for development
-    if (dev) {
-      try {
-        require('ts-node').register({
-          project: './tsconfig.json',
-          transpileOnly: true,
-        });
-      } catch (e) {
-        // ts-node not available, will try .next output
-      }
-    }
-    
-    // Try to load from .next build output first
-    try {
-      const { getWSService } = require('./.next/server/src/server/services/wsService.js');
-      wsService = getWSService();
-      console.log('[WebSocket] Loaded wsService from build output');
-    } catch (buildError) {
-      // Fall back to source TypeScript
-      if (dev) {
-        const { getWSService } = require('./src/server/services/wsService.ts');
-        wsService = getWSService();
-        console.log('[WebSocket] Loaded wsService from TypeScript source');
-      } else {
-        throw buildError;
-      }
-    }
-  } catch (error) {
-    // Fallback: create a minimal wsService for development
-    console.warn('[WebSocket] Could not load wsService, using stub:', error.message);
-    wsService = {
-      initialize: (wss) => console.log('[WebSocket] Service initialized (stub)'),
-      shutdown: () => console.log('[WebSocket] Service shutdown (stub)'),
-      broadcastLog: (log) => console.log('[WebSocket] Broadcasting log (stub)'),
-    };
-  }
-  wsService.initialize(wss);
 
   // Start log stream monitor to broadcast new database entries
   let logStreamMonitor = null;
@@ -122,30 +84,8 @@ app.prepare().then(() => {
     }, 1000);
   } catch (error) {
     console.warn('[LogStreamMonitor] Could not load monitor:', error.message);
-    console.log('[LogStreamMonitor] WebSocket will use historical queries only');
   }
 
-  // Handle WebSocket upgrade requests
-  server.on('upgrade', (req, socket, head) => {
-    // Only upgrade if the path is /api/ws (allow trailing slash and query string)
-    const { pathname } = parse(req.url || '', true);
-    if (pathname === '/api/ws') {
-      try {
-        console.log('[WebSocket] Handling upgrade request from', req.headers['x-forwarded-for'] || req.socket.remoteAddress);
-        
-        wss.handleUpgrade(req, socket, head, (ws) => {
-          // This emits the 'connection' event on the WebSocket server
-          wss.emit('connection', ws, req);
-        });
-      } catch (error) {
-        console.error('[WebSocket] Error handling upgrade:', error);
-        socket.destroy();
-      }
-    } else {
-      // Not a WebSocket request we care about
-      socket.destroy();
-    }
-  });
 
   // Handle server shutdown gracefully
   process.on('SIGTERM', () => {
@@ -155,9 +95,6 @@ app.prepare().then(() => {
     if (logStreamMonitor) {
       logStreamMonitor.stop();
     }
-    
-    // Close WebSocket connections
-    wsService.shutdown();
     
     // Close server
     server.close(() => {
@@ -179,9 +116,8 @@ app.prepare().then(() => {
 ║   SOVD Log Dashboard Server Started        ║
 ║━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ║
 ║   URL: http://${hostname}:${port}                    ║
-║   WebSocket: ws://${hostname}:${port}/api/ws        ║
 ║   Environment: ${dev ? 'DEVELOPMENT' : 'PRODUCTION'}              ║
-║   Mode: Self-hosted (Full WebSocket)       ║
+║   Streaming: SSE via /api/sse               ║
 ╚════════════════════════════════════════════╝
     `);
   });
