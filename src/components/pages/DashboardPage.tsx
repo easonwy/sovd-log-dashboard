@@ -37,6 +37,7 @@ export const DashboardPage = () => {
   
   // UI-specific state that doesn't need to be global.
   const [isStatsVisible, setIsStatsVisible] = useState(true);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(true);
 
   // Select state from the Zustand store using stable selectors.
   // Each selector is defined outside the component to avoid recreation.
@@ -85,6 +86,8 @@ export const DashboardPage = () => {
       <Header 
         isStatsVisible={isStatsVisible} 
         onToggleStats={() => setIsStatsVisible(p => !p)} 
+        isFiltersVisible={isFiltersVisible}
+        onToggleFilters={() => setIsFiltersVisible(p => !p)}
       />
       
       {/* Loading / Error Bar */}
@@ -96,7 +99,7 @@ export const DashboardPage = () => {
       )}
 
       <main className="flex flex-1 overflow-hidden">
-        <FilterSidebar />
+        {isFiltersVisible && <FilterSidebar />}
 
         <div className="flex-1 flex flex-col overflow-hidden">
           {isStatsVisible && (

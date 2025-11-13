@@ -13,12 +13,15 @@ import {
   Play,
   Pause,
   Wifi,
+  Filter,
 } from 'lucide-react';
 
 // The Header needs a prop to toggle the stats panel visibility
 interface HeaderProps {
   isStatsVisible: boolean;
   onToggleStats: () => void;
+  isFiltersVisible: boolean;
+  onToggleFilters: () => void;
 }
 
 // Memoized selectors to avoid infinite loops
@@ -30,7 +33,7 @@ const selectIsPaused = (state: LogState) => state.isPaused;
 const selectTogglePause = (state: LogState) => state.togglePause;
 const selectIsConnected = (state: LogState) => state.isConnected;
 
-export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
+export const Header = ({ isStatsVisible, onToggleStats, isFiltersVisible, onToggleFilters }: HeaderProps) => {
   const { t, language, setLanguage } = useI18n();
 
   // Select individual state values and actions from the Zustand store
@@ -129,6 +132,15 @@ export const Header = ({ isStatsVisible, onToggleStats }: HeaderProps) => {
           title={isStatsVisible ? t('hideStats') : t('showStats')}
         >
           <BarChart3 size={20} />
+        </button>
+
+        {/* Toggle Filters Panel Button */}
+        <button
+          onClick={onToggleFilters}
+          className={`p-2 rounded-full shadow-md transition-all ${isFiltersVisible ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+          title={isFiltersVisible ? t('hideFilters') : t('showFilters')}
+        >
+          <Filter size={20} />
         </button>
         
         {/* Pause/Play Toggle (Only in Stream Mode) */}
