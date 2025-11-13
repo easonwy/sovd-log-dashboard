@@ -19,7 +19,7 @@ interface DbConfig {
   connectionLimit: number;
   queueLimit: number;
   enableKeepAlive: boolean;
-  keepAliveInitialDelayMs: number;
+  keepAliveInitialDelay: number;
 }
 
 /**
@@ -40,7 +40,7 @@ export async function getPool(): Promise<Pool> {
     connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
-    keepAliveInitialDelayMs: 0,
+    keepAliveInitialDelay: 0,
   };
 
   try {

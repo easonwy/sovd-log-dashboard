@@ -13,6 +13,14 @@ const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
 
+function makeBanner(title, lines) {
+  const width = Math.max(title.length, ...lines.map((l) => l.length));
+  const top = `╔${'═'.repeat(width + 2)}╗`;
+  const bottom = `╚${'═'.repeat(width + 2)}╝`;
+  const content = [`║ ${title.padEnd(width, ' ')} ║`, ...lines.map((l) => `║ ${l.padEnd(width, ' ')} ║`)].join('\n');
+  return `${top}\n${content}\n${bottom}`;
+}
+
 // Initialize Next.js app
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -25,6 +33,7 @@ app.prepare().then(() => {
       require('ts-node').register({
         project: './tsconfig.json',
         transpileOnly: true,
+        compilerOptions: { module: 'CommonJS', moduleResolution: 'node' }
       });
       console.log('[Dev] ts-node registered for TypeScript requires');
     } catch (e) {
@@ -111,14 +120,11 @@ app.prepare().then(() => {
 
   // Start server
   server.listen(port, () => {
-    console.log(`
-╔════════════════════════════════════════════╗
-║   SOVD Log Dashboard Server Started        ║
-║━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ║
-║   URL: http://${hostname}:${port}                    ║
-║   Environment: ${dev ? 'DEVELOPMENT' : 'PRODUCTION'}              ║
-║   Streaming: SSE via /api/sse               ║
-╚════════════════════════════════════════════╝
-    `);
+    const banner = makeBanner('SOVD Log Dashboard Server Started', [
+      `URL: http://${hostname}:${port}`,
+      `Environment: ${dev ? 'DEVELOPMENT' : 'PRODUCTION'}`,
+      'Streaming: SSE via /api/sse',
+    ]);
+    console.log(banner);
   });
 });
