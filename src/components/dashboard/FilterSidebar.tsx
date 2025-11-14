@@ -23,7 +23,7 @@ interface FilterSidebarProps {
 
 export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
   const { t } = useI18n();
-  const [openSection, setOpenSection] = useState<'levels' | 'modules' | 'timeRange'>('levels');
+  const [openSection, setOpenSection] = useState<'levels' | 'modules' | 'timeRange'>('modules');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
 
@@ -140,8 +140,8 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
         {t('currentMode')}: {viewMode === 'STREAM' ? t('streamMode') : t('historyMode')}
       </div>
 
-      {renderFilterGroup('logLevels', LOG_LEVELS, 'levels')}
       {renderFilterGroup('modules', LOG_MODULES, 'modules')}
+      {renderFilterGroup('logLevels', LOG_LEVELS, 'levels')}
       
       {/* Time Range Filter */}
       <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">

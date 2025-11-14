@@ -50,7 +50,7 @@ class LogService {
   private useMockDb: boolean;
 
   constructor(useMockDb: boolean = false) {
-    this.useMockDb = useMockDb || process.env.USE_MOCK_DB === 'true';
+    this.useMockDb = useMockDb || process.env.MOCK_MODE === 'true';
   }
 
   /**

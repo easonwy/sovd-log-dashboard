@@ -22,8 +22,8 @@ const BACKEND_URL = typeof window !== 'undefined'
   ? process.env.NEXT_PUBLIC_BACKEND_URL || `${window.location.origin}`
   : process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
-// A flag to force mock mode via .env file (NEXT_PUBLIC_FORCE_MOCK_API=true)
-const FORCE_MOCK = process.env.NEXT_PUBLIC_FORCE_MOCK_API === 'true';
+// Unified mock mode flag (client-side)
+const FORCE_MOCK = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
 
 const getMockHistory = (offset: number, limit: number): HistoryResponse => {
   console.warn('Serving MOCK data for historical logs.');

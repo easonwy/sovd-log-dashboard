@@ -24,6 +24,13 @@ class LogStreamMonitor {
   private lastCreateTime: string = LogStreamMonitor.toSqlDateTime(new Date(Date.now() - 10 * 60 * 1000));
   private readonly POLL_INTERVAL = 2000; // Poll every 2 seconds
   private isRunning = false;
+  
+  private isMockStreamEnabled(): boolean {
+    return (
+      process.env.MOCK_MODE === 'true' ||
+      process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+    );
+  }
 
   /**
    * Start monitoring the database for new logs
@@ -36,9 +43,13 @@ class LogStreamMonitor {
 
     // Wrap in async IIFE to handle the async isConnected() call
     (async () => {
-      if (!await isConnected()) {
-        console.warn('[LogStreamMonitor] Database not connected, skipping monitor startup');
-        return;
+      if (!this.isMockStreamEnabled()) {
+        if (!await isConnected()) {
+          console.warn('[LogStreamMonitor] Database not connected, skipping monitor startup');
+          return;
+        }
+      } else {
+        console.log('[LogStreamMonitor] Using mock stream generation (MOCK_MODE)');
       }
 
       this.isRunning = true;
@@ -76,6 +87,28 @@ class LogStreamMonitor {
     }
 
     try {
+      if (this.isMockStreamEnabled()) {
+        // Generate a small batch of mock logs and broadcast
+        let broadcastCount = 0;
+        const batchSize = 5;
+        for (let i = 0; i < batchSize; i++) {
+          try {
+            const { generateMockLog } = await import('./mockService');
+            const logEntry = generateMockLog();
+            eventBus.emit('log', logEntry);
+            broadcastCount++;
+          } catch (error) {
+            console.error('[LogStreamMonitor] Error generating mock log:', error);
+          }
+        }
+        if (broadcastCount > 0) {
+          console.log(`[LogStreamMonitor] Broadcasted ${broadcastCount} mock logs to connected clients`);
+        }
+        // Advance cursor to now to reflect progress
+        this.lastCreateTime = LogStreamMonitor.toSqlDateTime(new Date());
+        return;
+      }
+
       const connected = await isConnected();
       if (!connected) {
         console.warn('[LogStreamMonitor] Database not connected, skipping poll');
