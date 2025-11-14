@@ -2,9 +2,9 @@
 
 **Status**: ✅ Production Ready | **All 4 Phases Complete** | **100% Type-Safe** | **Fully Tested**
 
-SOVD Log Dashboard is a **production-ready, full-stack real-time log streaming application**. It provides a robust, user-friendly interface for monitoring and analyzing system logs with real-time WebSocket streaming, advanced filtering, and 1000+ concurrent connection support.
+SOVD Log Dashboard is a **production-ready, full-stack real-time log streaming application**. It provides a robust, user-friendly interface for monitoring and analyzing system logs with real-time Server-Sent Events (SSE) streaming, advanced filtering, and 1000+ concurrent connection support.
 
-Built with **Next.js 15, React 19, MySQL 8, TypeScript**, and **WebSocket** for modern real-time performance.
+Built with **Next.js 15, React 19, MySQL 8, TypeScript**, and **Server-Sent Events** for modern real-time performance.
 
 ---
 
@@ -47,7 +47,7 @@ node server.js
 ## Key Features
 
 ### Real-Time Log Streaming ✅
-- WebSocket-based real-time delivery (50-100ms latency)
+- Server-Sent Events (SSE) real-time delivery (50-100ms latency)
 - 1000+ concurrent connections supported
 - 500+ messages/second throughput
 - Automatic reconnection with exponential backoff
@@ -82,17 +82,17 @@ node server.js
 ┌──────────────────────────────┐
 │  Browser (React + Zustand)   │
 ├──────────────────────────────┤
-│  WebSocket Connection        │
-│  ws://localhost:3000/api/ws  │
+│  SSE Connection              │
+│  http://localhost:3000/api/sse│
 ├──────────────────────────────┤
 │  Node.js Server + Next.js    │
-│  - WebSocket Handler         │
+│  - SSE Handler               │
 │  - REST API Endpoints        │
 │  - Real-time Broadcasting    │
 ├──────────────────────────────┤
 │  Service Layer               │
 │  - Log Service               │
-│  - WebSocket Service         │
+│  - SSE Service               │
 │  - Filter Matching           │
 ├──────────────────────────────┤
 │  MySQL Database              │
@@ -129,7 +129,7 @@ node server.js
 - Connection pooling
 - Graceful fallback
 
-### Phase 3: WebSocket Streaming ✅
+### Phase 3: SSE Streaming ✅
 - Real-time log delivery
 - Per-client filtering
 - Heartbeat keep-alive
@@ -147,12 +147,12 @@ node server.js
 ```bash
 # Development
 npm run dev              # Start Next.js dev server
-node server.js          # Start with WebSocket support
+node server.js          # Start with SSE streaming support
 
 # Production
 npm run build           # Build for production
 npm run start           # Start production server
-NODE_ENV=production node server.js  # Production with WebSocket
+NODE_ENV=production node server.js  # Production with SSE
 
 # Testing & Performance
 npm test                # Run Jest tests
@@ -264,8 +264,8 @@ npm run load-test
 
 ### Performance Verification
 ```bash
-# Check WebSocket connection
-curl -i -H "Upgrade: websocket" http://localhost:3000/api/ws
+# Check SSE connection
+curl -N -H "Accept: text/event-stream" http://localhost:3000/api/sse
 
 # Check REST API
 curl http://localhost:3000/api/v1/logs?limit=5
@@ -287,7 +287,7 @@ src/
 │       ├── v1/            # REST API
 │       │   ├── logs/
 │       │   └── stats/
-│       └── ws/            # WebSocket upgrade
+│       └── sse/           # Server-Sent Events
 ├── server/                 # Backend services
 │   ├── db/                # Database layer
 │   │   ├── client.ts      # Connection pooling
@@ -295,7 +295,7 @@ src/
 │   └── services/          # Business logic
 │       ├── logService.ts
 │       ├── mockService.ts
-│       └── wsService.ts
+│       └── logStreamMonitor.ts
 ├── components/            # React components
 │   ├── dashboard/
 │   ├── layout/
@@ -305,18 +305,6 @@ src/
 ├── types/                 # TypeScript interfaces
 └── utils/                 # Helper functions
 ```
-
----
-
-## Documentation
-
-- **[PROJECT_COMPLETE.md](./PROJECT_COMPLETE.md)** - Complete project summary
-- **[STATUS_REPORT.md](./STATUS_REPORT.md)** - Overall project status
-- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - 700+ lines covering all deployment options
-- **[IMPLEMENTATION_PHASE_3.md](./IMPLEMENTATION_PHASE_3.md)** - WebSocket architecture (600+ lines)
-- **[PHASE_4_COMPLETION_REPORT.md](./PHASE_4_COMPLETION_REPORT.md)** - Testing & optimization details
-- **[PHASE_3_QUICKSTART.md](./PHASE_3_QUICKSTART.md)** - WebSocket setup guide
-- **[PHASE_3_SUMMARY.md](./PHASE_3_SUMMARY.md)** - Feature summary
 
 ---
 
@@ -332,7 +320,7 @@ src/
 **Backend:**
 - Next.js 15.0 (Framework)
 - Node.js 20 (Runtime)
-- WebSocket (ws 8.14)
+- Server-Sent Events (SSE)
 - MySQL 8.0+ (Database)
 
 **DevOps:**
@@ -356,7 +344,7 @@ src/
 - p99: 95ms (edge cases)
 
 ### Scalability
-- 1000+ concurrent WebSocket connections per instance
+- 1000+ concurrent SSE connections per instance
 - 80-90% bandwidth savings via server-side filtering
 - 2KB memory overhead per client session
 
@@ -410,6 +398,26 @@ docker service update --image your-registry/sovd:2.0.0 log-dashboard
 
 ---
 
+## Multi-Language Support
+
+The dashboard supports multiple languages with i18n:
+- **Chinese** (简体中文)
+- **English** (English)
+- **Japanese** (日本語)
+
+Language switching is available in the UI with full translation coverage.
+
+---
+
+## Documentation
+
+Documentation files are available in the `/docs` directory:
+- **[DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)** - Comprehensive deployment guide covering all cloud providers
+- **[DEPLOYMENT_READY.md](./docs/DEPLOYMENT_READY.md)** - Production deployment checklist and readiness guide
+- **[REQUIREMENT.md](./docs/REQUIREMENT.md)** - Detailed project requirements and specifications
+
+---
+
 ## License
 
 MIT
@@ -418,11 +426,10 @@ MIT
 
 ## Support
 
-For detailed information, see the documentation files:
-- Deployment: `DEPLOYMENT_GUIDE.md`
-- Testing: `PHASE_4_COMPLETION_REPORT.md`
-- WebSocket: `IMPLEMENTATION_PHASE_3.md`
-- Overall Status: `STATUS_REPORT.md`
+For detailed information, see the documentation files in the `/docs` directory:
+- **Deployment**: `docs/DEPLOYMENT_GUIDE.md`
+- **Production Readiness**: `docs/DEPLOYMENT_READY.md`
+- **Requirements**: `docs/REQUIREMENT.md`
 
 ---
 
