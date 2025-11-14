@@ -35,7 +35,7 @@ export const LogListHeader = ({ filteredLogCount }: LogListHeaderProps) => {
   };
 
   return (
-    <div className="py-2 px-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-inner shrink-0">
+    <div className="py-2 px-4 bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 flex justify-between items-center text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-inner shrink-0">
       {viewMode === 'STREAM' ? (
         <span>
           {t('showing')} {filteredLogCount} {t('logsUnit')} ({t('filtered')}) / {t('totalStreamBuffer')} {logs.length} ({t('maxStorage')}: {MAX_LOG_COUNT})

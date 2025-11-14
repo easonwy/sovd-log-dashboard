@@ -16,6 +16,8 @@ import {
   Filter,
 } from 'lucide-react';
 
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+
 // The Header needs a prop to toggle the stats panel visibility
 interface HeaderProps {
   isStatsVisible: boolean;
@@ -77,8 +79,8 @@ export const Header = ({ isStatsVisible, onToggleStats, isFiltersVisible, onTogg
   };
 
   return (
-    <header className="flex items-center justify-between p-4 bg-white shadow-md z-10 shrink-0">
-      <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+    <header className="flex items-center justify-between p-4 bg-white shadow-md z-10 shrink-0 dark:bg-gray-800">
+      <h1 className="text-2xl font-bold text-gray-800 flex items-center dark:text-gray-200">
         <LogOut size={24} className="text-indigo-600 mr-3 transform rotate-90" />
         {t('appTitle')}
       </h1>
@@ -88,7 +90,7 @@ export const Header = ({ isStatsVisible, onToggleStats, isFiltersVisible, onTogg
           <input
             type="text"
             placeholder={t('searchPlaceholder')}
-            className="py-2 px-4 w-64 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow text-sm"
+            className="py-2 px-4 w-64 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow text-sm dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
             value={filters.searchText}
             onChange={handleSearchChange}
           />
@@ -124,6 +126,8 @@ export const Header = ({ isStatsVisible, onToggleStats, isFiltersVisible, onTogg
           <Languages size={20} className="mr-1" />
           {getNextLangCode()}
         </button>
+
+        <ThemeSwitcher />
 
         {/* Toggle Stats Panel Button */}
         <button

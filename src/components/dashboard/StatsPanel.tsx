@@ -75,7 +75,7 @@ export const StatsPanel = ({ filteredLogs, onClose }: StatsPanelProps) => {
   );
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900/50 p-4 border-b dark:border-gray-700 shrink-0">
+    <div className="bg-gray-100 dark:bg-gray-900/50 p-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
           <BarChart3 size={20} className="mr-2 text-indigo-600" />

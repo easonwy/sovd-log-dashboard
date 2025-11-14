@@ -36,11 +36,11 @@ const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
 
   const getLevelClasses = (level: LogEntry['level']) => {
     switch (level) {
-      case 'ERROR': return 'text-red-600 bg-red-100 border-red-300';
-      case 'WARN': return 'text-yellow-700 bg-yellow-100 border-yellow-300';
-      case 'INFO': return 'text-blue-600 bg-blue-100 border-blue-300';
-      case 'SUCCESS': return 'text-green-600 bg-green-100 border-green-300';
-      default: return 'text-gray-600 bg-gray-100 border-gray-300';
+      case 'ERROR': return 'text-red-600 bg-red-100 border-red-300 dark:text-red-300 dark:bg-red-900/50 dark:border-red-700';
+      case 'WARN': return 'text-yellow-700 bg-yellow-100 border-yellow-300 dark:text-yellow-300 dark:bg-yellow-900/50 dark:border-yellow-700';
+      case 'INFO': return 'text-blue-600 bg-blue-100 border-blue-300 dark:text-blue-300 dark:bg-blue-900/50 dark:border-blue-700';
+      case 'SUCCESS': return 'text-green-600 bg-green-100 border-green-300 dark:text-green-300 dark:bg-green-900/50 dark:border-green-700';
+      default: return 'text-gray-600 bg-gray-100 border-gray-300 dark:text-gray-400 dark:bg-gray-700/50 dark:border-gray-600';
     }
   };
 

@@ -72,7 +72,7 @@ export const TimeHistogram = () => {
   if (viewMode !== 'STREAM') return null;
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 border-b border-t dark:border-gray-700 shrink-0">
+    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 border-b border-t border-gray-200 dark:border-gray-700 shrink-0">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
           <Clock size={16} className="mr-1 text-indigo-500" />

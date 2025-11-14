@@ -41,7 +41,7 @@ export const LogList = ({ filteredLogs }: LogListProps) => {
   return (
     <div 
       ref={logListRef} 
-      className="w-full h-full overflow-y-scroll bg-white dark:bg-gray-900"
+      className="w-full h-full overflow-y-scroll bg-white dark:bg-gray-800"
     >
       {filteredLogs.map(log => (
         <LogItem

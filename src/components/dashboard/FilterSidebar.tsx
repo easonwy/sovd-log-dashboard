@@ -120,7 +120,7 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
   );
 
   return (
-    <div className="w-64 p-4 bg-gray-50 dark:bg-gray-900 border-r dark:border-gray-700 overflow-y-auto shrink-0">
+    <div className="w-64 p-4 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 overflow-y-auto shrink-0">
       <div className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center justify-between">
         <span className="flex items-center">
           <Filter size={18} className="mr-2" /> {t('filter')}

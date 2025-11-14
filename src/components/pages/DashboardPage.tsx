@@ -119,7 +119,7 @@ export const DashboardPage = () => {
           </div>
       )}
 
-      <main className="flex flex-1 overflow-hidden">
+      <main className="flex flex-1 overflow-hidden bg-gray-100 dark:bg-gray-900">
         {isFiltersVisible && <FilterSidebar onClose={() => setIsFiltersVisible(false)} />}
 
         <div className="flex-1 flex flex-col overflow-hidden">
