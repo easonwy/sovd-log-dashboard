@@ -2,11 +2,11 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/useI18n';
 import { getInitialFilters } from '@/utils/logUtils';
-import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
+import { LOG_LEVELS } from '@/constants/logConstants';
 import { Filter, ChevronDown, ChevronUp, Database } from 'lucide-react';
 import { LogEntry, LogFilters } from '@/types';
 
@@ -26,12 +26,42 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
   const [openSection, setOpenSection] = useState<'levels' | 'modules' | 'timeRange'>('modules');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
+  const [modules, setModules] = useState<string[]>([]);
+  const [modulesLoading, setModulesLoading] = useState(true);
+  const [modulesError, setModulesError] = useState<string | null>(null);
 
   const filters = useLogStore(selectFilters);
   const setFilters = useLogStore(selectSetFilters);
   const viewMode = useLogStore(selectViewMode);
   const setViewMode = useLogStore(selectSetViewMode);
   const logs = useLogStore(selectLogs);
+  
+  // Fetch modules from API
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setModulesLoading(true);
+        setModulesError(null);
+        const response = await fetch('/api/v1/modules');
+        const result = await response.json();
+        
+        if (result.success && Array.isArray(result.data)) {
+          setModules(result.data);
+        } else {
+          setModulesError('Failed to load modules');
+          setModules([]);
+        }
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+        setModulesError('Error loading modules');
+        setModules([]);
+      } finally {
+        setModulesLoading(false);
+      }
+    };
+    
+    fetchModules();
+  }, []);
   
   // Calculate counts based on currently visible logs in STREAM mode
   const logCounts = useMemo(() => {
@@ -140,7 +170,17 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
         {t('currentMode')}: {viewMode === 'STREAM' ? t('streamMode') : t('historyMode')}
       </div>
 
-      {renderFilterGroup('modules', LOG_MODULES, 'modules')}
+      {modulesLoading ? (
+        <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="text-xs text-gray-600 dark:text-gray-400">{t('loading') || 'Loading...'}</div>
+        </div>
+      ) : modulesError ? (
+        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/50 p-3 shadow-sm border border-red-200 dark:border-red-700">
+          <div className="text-xs text-red-600 dark:text-red-300">{modulesError}</div>
+        </div>
+      ) : (
+        renderFilterGroup('modules', modules, 'modules')
+      )}
       {renderFilterGroup('logLevels', LOG_LEVELS, 'levels')}
       
       {/* Time Range Filter */}

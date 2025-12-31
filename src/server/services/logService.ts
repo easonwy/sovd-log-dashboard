@@ -10,6 +10,7 @@ import {
   getModuleDistributionQuery,
   getTimeSeriesQuery,
   getTotalCountQuery,
+  getDistinctModulesQuery,
 } from '@/server/db/queries';
 
 interface GetLogsParams {
@@ -88,6 +89,25 @@ class LogService {
       console.error('Error fetching statistics:', error);
       // Fallback to mock data on any error
       return this.getMockStatistics(params);
+    }
+  }
+
+  /**
+   * Get distinct modules from logs
+   */
+  async getDistinctModules(): Promise<string[]> {
+    try {
+      // First check if database is available and not forced to mock
+      if (!this.useMockDb && (await isConnected())) {
+        return this.getDatabaseDistinctModules();
+      }
+
+      // Fallback to mock data
+      return this.getMockDistinctModules();
+    } catch (error) {
+      console.error('Error fetching distinct modules:', error);
+      // Fallback to mock data on any error
+      return this.getMockDistinctModules();
     }
   }
 
@@ -204,6 +224,18 @@ class LogService {
   }
 
   /**
+   * Fetch distinct modules from real database
+   */
+  private async getDatabaseDistinctModules(): Promise<string[]> {
+    const query = getDistinctModulesQuery();
+    const results = await executeQuery<{ module: string }>(
+      query.query,
+      query.params
+    );
+    return (results || []).map(row => row.module);
+  }
+
+  /**
    * Get mock historical logs
    */
   private getMockHistoricalLogs(params: GetLogsParams): GetLogsResponse {
@@ -255,6 +287,20 @@ class LogService {
       offset: params.offset,
       limit: params.limit,
     };
+  }
+
+  /**
+   * Get mock distinct modules
+   */
+  private getMockDistinctModules(): string[] {
+    const allLogs = generateMockLogs(5000);
+    const modules = new Set<string>();
+    allLogs.forEach(log => {
+      if (log.module) {
+        modules.add(log.module);
+      }
+    });
+    return Array.from(modules).sort();
   }
 
   /**

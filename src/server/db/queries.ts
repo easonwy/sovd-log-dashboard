@@ -271,6 +271,16 @@ export function getInsertLogQuery(log: {
 }
 
 /**
+ * Get distinct modules from logs
+ */
+export function getDistinctModulesQuery(): { query: string; params: (string | number)[] } {
+  return {
+    query: 'SELECT DISTINCT module FROM infra_module_log WHERE module IS NOT NULL AND module != "" ORDER BY module ASC',
+    params: [],
+  };
+}
+
+/**
  * Get total count of all logs
  */
 export function getTotalCountQuery(): { query: string; params: (string | number)[] } {
