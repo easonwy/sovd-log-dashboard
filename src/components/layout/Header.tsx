@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/useI18n';
 import type { LogState } from '@/store/logStore';
 import {
-  LogOut,
   List,
   Database,
   Languages,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+import appIcon from '@/app/icon.svg';
 
 // The Header needs a prop to toggle the stats panel visibility
 interface HeaderProps {
@@ -81,7 +82,7 @@ export const Header = ({ isStatsVisible, onToggleStats, isFiltersVisible, onTogg
   return (
     <header className="flex items-center justify-between p-4 bg-white shadow-md z-10 shrink-0 dark:bg-gray-800">
       <h1 className="text-2xl font-bold text-gray-800 flex items-center dark:text-gray-200">
-        <LogOut size={24} className="text-indigo-600 mr-3 transform rotate-90" />
+        <Image src={appIcon} alt="App Icon" width={24} height={24} className="mr-3" />
         {t('appTitle')}
       </h1>
 

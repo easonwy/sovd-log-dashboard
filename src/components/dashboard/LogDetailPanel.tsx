@@ -17,7 +17,7 @@ const DetailItem = ({ label, value, color }: { label: string, value: string, col
     color === 'ERROR' ? 'text-red-600 dark:text-red-400' :
     color === 'WARN' ? 'text-yellow-700 dark:text-yellow-400' :
     color === 'INFO' ? 'text-blue-600 dark:text-blue-400' :
-    color === 'SUCCESS' ? 'text-green-600 dark:text-green-400' :
+    color === 'DEBUG' ? 'text-green-600 dark:text-green-400' :
     'text-gray-700 dark:text-gray-300';
 
   return (
@@ -87,7 +87,7 @@ export const LogDetailPanel = ({ log, onClose }: LogDetailPanelProps) => {
   const getLocale = () => (language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US');
 
   return (
-    <div className="w-96 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-xl z-20 shrink-0">
+    <div className="w-[600px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-xl z-20 shrink-0">
       <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('logDetails')}</h3>
         <button onClick={onClose} className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">

@@ -4,7 +4,7 @@ import Providers from './providers';
 import '../index.css';
 
 export const metadata: Metadata = {
-  title: 'SOVD Log Dashboard',
+  title: 'Log Dashboard',
   description: 'Real-time log streaming and analysis dashboard',
 };
 

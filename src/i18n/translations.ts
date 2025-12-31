@@ -6,7 +6,7 @@ import { Language } from "@/types";
  */
 export const translations: Record<Language, Record<string, string>> = {
   zh: {
-    appTitle: 'SOVD 远程诊断日志仪表盘',
+    appTitle: 'Log Dashboard',
     filter: '过滤器',
     currentMode: '当前模式',
     streamMode: '实时流',
@@ -70,7 +70,7 @@ export const translations: Record<Language, Record<string, string>> = {
     logs: '日志',
   },
   en: {
-    appTitle: 'SOVD Log Dashboard',
+    appTitle: 'Log Dashboard',
     filter: 'Filters',
     currentMode: 'Current Mode',
     streamMode: 'Stream Mode',
@@ -134,7 +134,7 @@ export const translations: Record<Language, Record<string, string>> = {
     logs: 'Logs',
   },
   ja: {
-    appTitle: 'SOVD リモート診断ログダッシュボード',
+    appTitle: 'Log Dashboard',
     filter: 'フィルター',
     currentMode: '現在のモード',
     streamMode: 'ストリームモード',

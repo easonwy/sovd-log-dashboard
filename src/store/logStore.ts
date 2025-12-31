@@ -88,13 +88,28 @@ export const useLogStore = create<LogState>((set, get) => ({
     return { logs: newLogs.slice(0, MAX_LOG_COUNT) };
   }),
 
-  setViewMode: (mode) => set({ 
-    viewMode: mode,
-    page: 1,
-    selectedLog: null,
-    filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
-    logs: [], // Always clear logs when switching modes to prevent mixing data
-    totalLogsCount: 0, // Reset total count as well
+  setViewMode: (mode) => set((state) => {
+    // When switching to STREAM mode, restore demo logs if empty
+    // When switching to HISTORY mode, keep current logs (they'll be replaced by history)
+    if (mode === 'STREAM' && state.logs.length === 0) {
+      return {
+        viewMode: mode,
+        page: 1,
+        selectedLog: null,
+        filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
+        logs: generateDemoLogs(), // Restore demo logs for STREAM mode
+        totalLogsCount: 0,
+      };
+    }
+    
+    return {
+      viewMode: mode,
+      page: 1,
+      selectedLog: null,
+      filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
+      logs: mode === 'HISTORY' ? state.logs : generateDemoLogs(), // Keep logs in HISTORY, restore demo in STREAM
+      totalLogsCount: 0,
+    };
   }),
 
   // --- ASYNC ACTION IMPLEMENTATION ---
