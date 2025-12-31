@@ -38,35 +38,45 @@ export const LogDetailPanel = ({ log, onClose }: LogDetailPanelProps) => {
   
   const detailsString = useMemo(() => {
     if (!log.details) return null;
-    const sanitize = (val: any): any => {
+
+    type JSONPrimitive = string | number | boolean | null;
+    type JSONValue = JSONPrimitive | { [key: string]: JSONValue } | JSONValue[];
+
+    const sanitize = (val: JSONValue | unknown): JSONValue => {
       if (typeof val === 'string') {
         return val.replace(/`/g, '').trim();
       }
       if (Array.isArray(val)) {
-        return val.map(sanitize);
+        return val.map((v) => sanitize(v));
       }
       if (val && typeof val === 'object') {
-        const out: Record<string, any> = {};
-        for (const k of Object.keys(val)) out[k] = sanitize(val[k]);
+        const out: { [key: string]: JSONValue } = {};
+        for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+          out[k] = sanitize(v);
+        }
         return out;
       }
-      return val;
+      // number | boolean | null are returned as-is
+      return val as JSONValue;
     };
-    const tryParse = (s: string): any => {
+
+    const tryParse = (s: string): JSONValue | string => {
       try {
-        const first = JSON.parse(s);
+        const first = JSON.parse(s) as unknown;
         if (typeof first === 'string') {
-          try { return JSON.parse(first); } catch { return first; }
+          try { return JSON.parse(first) as JSONValue; } catch { return first; }
         }
-        return first;
+        return first as JSONValue;
       } catch {
         const cleaned = s.replace(/`/g, '').trim();
-        try { return JSON.parse(cleaned); } catch { return s; }
+        try { return JSON.parse(cleaned) as JSONValue; } catch { return s; }
       }
     };
-    const raw = typeof log.details === 'string' ? log.details : (log.details as any);
-    const parsed = typeof raw === 'string' ? tryParse(raw) : raw;
+
+    const raw = log.details as unknown;
+    const parsed = typeof raw === 'string' ? tryParse(raw) : (raw as JSONValue);
     const cleaned = sanitize(parsed);
+
     try {
       return JSON.stringify(cleaned, null, 2);
     } catch {
