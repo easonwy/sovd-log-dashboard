@@ -6,8 +6,8 @@ const levelPlaceholders = levels.map(() => '?').join(',');
 const modulePlaceholders = modules.map(() => '?').join(',');
 
 const query = `
-SELECT id, timestamp, module, level, message, trace_id, details, create_time
-FROM infra_module_logs
+SELECT id, timestamp, module, level, message, event_id, details, create_time
+FROM infra_module_log
 WHERE level IN (${levelPlaceholders}) AND module IN (${modulePlaceholders})
 ORDER BY timestamp DESC
 LIMIT ? OFFSET ?

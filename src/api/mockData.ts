@@ -24,7 +24,7 @@ export const generateDemoLogs = (): LogEntry[] => {
       return {
         id: crypto.randomUUID(), // Use modern UUID generation
         timestamp: timestamp,
-        traceId: `TRACE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        eventId: `EVENT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
         message: log.message || 'Demo log message',
         level: log.level || 'INFO',
         module: log.module || 'SYSTEM',
@@ -59,7 +59,7 @@ export const generateMockStreamLog = (): LogEntry => {
         level,
         module: logModule,
         message,
-        traceId: `TRACE-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+        eventId: `EVENT-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
         details: { mock: true, generatedAt: Date.now() },
     };
 };

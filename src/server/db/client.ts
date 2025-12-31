@@ -72,8 +72,8 @@ export async function executeQuery<T = Record<string, unknown>>(
     // Ensure params is always an array
     const queryParams = params || [];
     // Log for debugging
-    console.log(`[SQL] Query: ${sql.substring(0, 100)}...`);
-    console.log(`[SQL] Params count: ${queryParams.length}, Params:`, queryParams);
+    // console.log(`[SQL] Query: ${sql.substring(0, 100)}...`);
+    // console.log(`[SQL] Params count: ${queryParams.length}, Params:`, queryParams);
     const [results] = await connection.execute(sql, queryParams);
     return results as T[];
   } finally {

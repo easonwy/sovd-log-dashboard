@@ -90,7 +90,7 @@ export const DashboardPage = () => {
       const moduleMatch = modules[log.module];
       const searchMatch = !searchText || 
                           log.message.toLowerCase().includes(lowerCaseSearch) || 
-                          log.traceId.toLowerCase().includes(lowerCaseSearch);
+                          log.eventId.toLowerCase().includes(lowerCaseSearch);
       
       return levelMatch && moduleMatch && searchMatch;
     });

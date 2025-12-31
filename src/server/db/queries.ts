@@ -15,7 +15,7 @@ export interface LogRow {
   module: string;
   level: string;
   message: string;
-  trace_id: string | null;
+  event_id: string | null;
   details: string | object | null;
   create_time: string;
 }
@@ -46,7 +46,7 @@ export function rowToLogEntry(row: LogRow): LogEntry {
     module: row.module as LogEntry['module'],
     level: row.level as LogEntry['level'],
     message: row.message,
-    traceId: row.trace_id || '',
+    eventId: row.event_id || '',
     details: parsedDetails,
   };
 }
@@ -80,7 +80,7 @@ export function buildWhereClause(
 
   // Full-text search
   if (search) {
-    conditions.push(`(message LIKE ? OR trace_id LIKE ?)`);
+    conditions.push(`(message LIKE ? OR event_id LIKE ?)`);
     params.push(`%${search}%`, `%${search}%`);
   }
 
@@ -111,7 +111,7 @@ export function getCountQuery(
 ): { query: string; params: (string | number)[] } {
   const { clause, params } = buildWhereClause(levels, modules, search, startTime, endTime);
   
-  const query = `SELECT COUNT(*) as count FROM infra_module_logs ${clause}`;
+  const query = `SELECT COUNT(*) as count FROM infra_module_log ${clause}`;
   
   return { query, params };
 }
@@ -140,8 +140,8 @@ export function getLogsQuery(
   // Note: LIMIT and OFFSET are not parameterized in mysql2 prepared statements
   // They must be part of the query string itself
   const query = `
-    SELECT id, timestamp, module, level, message, trace_id, details, create_time
-    FROM infra_module_logs
+    SELECT id, timestamp, module, level, message, event_id, ticket_no, details, create_time
+    FROM infra_module_log
     ${clause}
     ORDER BY timestamp DESC
     LIMIT ${safeLimit} OFFSET ${safeOffset}
@@ -164,7 +164,7 @@ export function getLevelDistributionQuery(
   
   const query = `
     SELECT level, COUNT(*) as count
-    FROM infra_module_logs
+    FROM infra_module_log
     ${clause}
     GROUP BY level
   `.trim();
@@ -186,7 +186,7 @@ export function getModuleDistributionQuery(
   
   const query = `
     SELECT module, COUNT(*) as count
-    FROM infra_module_logs
+    FROM infra_module_log
     ${clause}
     GROUP BY module
   `.trim();
@@ -227,7 +227,7 @@ export function getTimeSeriesQuery(
   
   const query = `
     SELECT DATE_FORMAT(timestamp, '${dateFormat}') as timestamp, COUNT(*) as count
-    FROM infra_module_logs
+    FROM infra_module_log
     ${clause}
     GROUP BY DATE_FORMAT(timestamp, '${dateFormat}')
     ORDER BY timestamp ASC
@@ -248,11 +248,11 @@ export function getInsertLogQuery(log: {
   module: string;
   level: string;
   message: string;
-  traceId: string;
+  eventId: string;
   details: object | null;
 }): { query: string; params: (string | number | null)[] } {
   const query = `
-    INSERT INTO infra_module_logs (id, timestamp, module, level, message, trace_id, details, create_time)
+    INSERT INTO infra_module_log (id, timestamp, module, level, message, event_id, ticket_no, details, create_time)
     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
   `.trim();
 
@@ -264,7 +264,7 @@ export function getInsertLogQuery(log: {
       log.module,
       log.level,
       log.message,
-      log.traceId,
+      log.eventId,
       log.details ? JSON.stringify(log.details) : null,
     ],
   };
@@ -275,7 +275,7 @@ export function getInsertLogQuery(log: {
  */
 export function getTotalCountQuery(): { query: string; params: (string | number)[] } {
   return {
-    query: 'SELECT COUNT(*) as count FROM infra_module_logs',
+    query: 'SELECT COUNT(*) as count FROM infra_module_log',
     params: [],
   };
 }

@@ -7,7 +7,7 @@ export interface LogEntry {
   module: string;
   level: 'ERROR' | 'WARN' | 'INFO' | 'SUCCESS' | string;
   message: string;
-  traceId: string;
+  eventId: string;
   details: object | null;
 }
 

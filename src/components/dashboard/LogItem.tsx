@@ -57,14 +57,14 @@ const LogItem = ({ log, isSelected, onSelect }: LogItemProps) => {
       <div className={`w-16 font-semibold rounded-full px-2 py-0.5 text-center shrink-0 border ${levelClasses}`}>
         {log.level.slice(0, 1)}
       </div>
-      <div className="w-40 font-mono text-purple-600 dark:text-purple-400 ml-4 shrink-0 truncate" title={log.module}>
+      <div className="w-30 font-mono text-purple-600 dark:text-purple-400 ml-4 shrink-0 truncate" title={log.module}>
         {log.module}
+      </div>
+      <div className="w-50 font-mono text-purple-600 dark:text-purple-400 ml-4 shrink-0 truncate"  title={log.eventId}>
+        {log.eventId}
       </div>
       <div className="flex-grow text-gray-800 dark:text-gray-200 font-mono text-xs truncate ml-4">
         {log.message}
-      </div>
-      <div className="w-20 text-gray-400 dark:text-gray-500 text-[10px] shrink-0 text-right"  suppressHydrationWarning>
-        {log.traceId}
       </div>
     </div>
   );

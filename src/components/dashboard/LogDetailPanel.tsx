@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 import { LogEntry } from '@/types';
 import { useI18n } from '@/i18n/useI18n';
-import { X, Copy, Zap } from 'lucide-react';
+import { X, Copy } from 'lucide-react';
 
 interface LogDetailPanelProps {
   log: LogEntry;
@@ -38,17 +38,41 @@ export const LogDetailPanel = ({ log, onClose }: LogDetailPanelProps) => {
   
   const detailsString = useMemo(() => {
     if (!log.details) return null;
+    const sanitize = (val: any): any => {
+      if (typeof val === 'string') {
+        return val.replace(/`/g, '').trim();
+      }
+      if (Array.isArray(val)) {
+        return val.map(sanitize);
+      }
+      if (val && typeof val === 'object') {
+        const out: Record<string, any> = {};
+        for (const k of Object.keys(val)) out[k] = sanitize(val[k]);
+        return out;
+      }
+      return val;
+    };
+    const tryParse = (s: string): any => {
+      try {
+        const first = JSON.parse(s);
+        if (typeof first === 'string') {
+          try { return JSON.parse(first); } catch { return first; }
+        }
+        return first;
+      } catch {
+        const cleaned = s.replace(/`/g, '').trim();
+        try { return JSON.parse(cleaned); } catch { return s; }
+      }
+    };
+    const raw = typeof log.details === 'string' ? log.details : (log.details as any);
+    const parsed = typeof raw === 'string' ? tryParse(raw) : raw;
+    const cleaned = sanitize(parsed);
     try {
-      return JSON.stringify(log.details, null, 2);
+      return JSON.stringify(cleaned, null, 2);
     } catch {
       return JSON.stringify({ error: t('detailsParseError') }, null, 2);
     }
   }, [log.details, t]);
-
-  const handleTraceRequest = (traceId: string) => {
-    console.warn(`Requested Trace ID: ${traceId}. Backend is processing full span data.`);
-    // In a real app, this would trigger an API call.
-  };
 
   const getLocale = () => (language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US');
 
@@ -67,15 +91,8 @@ export const LogDetailPanel = ({ log, onClose }: LogDetailPanelProps) => {
           <DetailItem label={t('level')} value={log.level} color={log.level} />
           <DetailItem label={t('module')} value={log.module} />
           <div className="flex items-center text-sm font-medium">
-            <span className="w-24 text-gray-500 dark:text-gray-400 shrink-0">Trace ID:</span>
-            <code className="text-indigo-600 dark:text-indigo-400 font-mono text-xs bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded mr-2">{log.traceId}</code>
-            <button 
-              onClick={() => handleTraceRequest(log.traceId)}
-              className="text-xs text-white bg-indigo-500 hover:bg-indigo-600 rounded px-2 py-0.5 flex items-center transition-colors"
-              title={t('fullTrace')}
-            >
-              <Zap size={12} className="mr-1" /> {t('fullTrace')}
-            </button>
+            <span className="w-24 text-gray-500 dark:text-gray-400 shrink-0">Event:</span>
+            <code className="text-indigo-600 dark:text-indigo-400 font-mono text-xs bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded mr-2">{log.eventId}</code>
           </div>
         </div>
         <hr className="border-gray-100 dark:border-gray-700" />

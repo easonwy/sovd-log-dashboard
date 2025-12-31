@@ -23,8 +23,9 @@ export const LOG_LEVELS: LogEntry['level'][] = ['ERROR', 'WARN', 'INFO', 'FATAL'
  * This is used for creating filters and statistical charts.
  */
 export const LOG_MODULES: LogEntry['module'][] = [
-  'VEHICLE_OWNER',
-  'DIAGNOSIS_PLATFORM',
+  'VO',
+  'RDP',
+  'PROXY_SERVER',
   'SOVD_CLIENT',
   'HMI',
   'AUTH_SERVER',

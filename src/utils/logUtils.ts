@@ -29,7 +29,7 @@ export const generateDemoLogs = (): LogEntry[] => {
       return {
         id: `demo-${index}-${now}`,
         timestamp: timestamp,
-        traceId: `TRACE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        eventId: `EVENT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
         message: log.message || 'Demo log message',
         level: log.level || 'INFO',
         module: log.module || 'SYSTEM',

@@ -39,7 +39,7 @@
 | ------ | ------------------------------------------------------------ | ---------------------------------------------- | ---------- |
 | DC-401 | **点击展开详情**：实现点击日志条目展开详情面板的交互。       | Accordion / Drawer Component                   | 高         |
 | DC-402 | **结构化数据格式化**：自动检测 JSON/XML，并以可读的树状或高亮格式展示。 | JSON Formatter Library (e.g., react-json-view) | 高         |
-| DC-403 | **Trace ID/Request ID 关联**：自动识别并将其高亮，实现点击后发送**请求完整链路**的 API 调用。 | Regex / API Integration                        | 高         |
+| DC-403 | **Event/Request ID 关联**：自动识别并将其高亮，实现点击后发送**请求完整链路**的 API 调用。 | Regex / API Integration                        | 高         |
 | DC-404 | **差异对比视图**：实现选择两条日志后，对比其结构化内容差异的功能（例如使用 `diff` 库）。 | Diff Library                                   | 中         |
 | DC-405 | **复制功能优化**：实现“复制原始文本”和“复制格式化 JSON”两个按钮。 | Clipboard API                                  | 中         |
 
@@ -227,7 +227,7 @@ const logMatchesFilters = (log: LogEntry, clientFilters: MockClient['filters']):
         return false;
     }
     
-    // 文本筛选 (简化，只匹配消息和 Trace ID)
+    // 文本筛选 (简化，只匹配消息和 Event)
     if (searchText) {
         const lowerSearchText = searchText.toLowerCase();
         if (!log.message.toLowerCase().includes(lowerSearchText) && 

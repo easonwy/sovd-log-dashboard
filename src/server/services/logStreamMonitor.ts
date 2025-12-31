@@ -116,8 +116,8 @@ class LogStreamMonitor {
       }
 
       const query = `
-        SELECT id, timestamp, module, level, message, trace_id, details, create_time
-        FROM infra_module_logs
+        SELECT id, timestamp, module, level, message, event_id, details, ticket_no, create_time
+        FROM infra_module_log
         WHERE create_time > ?
         ORDER BY create_time ASC
         LIMIT 100
@@ -126,8 +126,6 @@ class LogStreamMonitor {
       const params = [this.lastCreateTime];
 
       const rows = await executeQuery<LogRow>(query, params);
-
-      console.log(`[LogStreamMonitor] Result count: ${rows ? rows.length : 0}`);
 
       if (rows && rows.length > 0) {
         console.log(`[LogStreamMonitor] Found ${rows.length} new log entries`);

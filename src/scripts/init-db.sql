@@ -24,10 +24,10 @@
 -- Main Logs Table
 -- ============================================================================
 -- Stores all application logs with support for structured data (JSON details)
--- and efficient querying by timestamp, level, module, and trace ID.
+-- and efficient querying by timestamp, level, module, and Event.
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS infra_module_logs (
+CREATE TABLE IF NOT EXISTS infra_module_log (
   -- Unique identifier for each log entry (UUID v4 as string)
   id VARCHAR(36) NOT NULL PRIMARY KEY COMMENT '唯一日志标识符 (UUID)',
   
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS infra_module_logs (
   -- Main log message/description
   message TEXT NOT NULL COMMENT '日志消息主体',
   
-  -- Optional trace ID to correlate logs across services
+  -- Optional Event to correlate logs across services
   -- Used for distributed tracing and request tracking
   trace_id VARCHAR(20) COMMENT '关联请求的追踪ID',
   
@@ -72,35 +72,35 @@ COMMENT='应用日志表 - 存储所有应用日志数据';
 -- Usage: ORDER BY timestamp DESC, time-range filtering (startTime, endTime)
 -- Impact: Dramatically improves pagination queries and time-series aggregation
 CREATE INDEX IF NOT EXISTS idx_logs_timestamp 
-  ON infra_module_logs (timestamp DESC) 
+  ON infra_module_log (timestamp DESC) 
   COMMENT 'Performance: Supports timestamp-based sorting and range queries';
 
 -- Level index: For filtering logs by severity
 -- Usage: WHERE level IN ('ERROR', 'WARNING')
 -- Impact: Accelerates level distribution queries
 CREATE INDEX IF NOT EXISTS idx_logs_level 
-  ON infra_module_logs (level) 
+  ON infra_module_log (level) 
   COMMENT 'Performance: Supports filtering by log level';
 
 -- Module index: For filtering logs by source service
 -- Usage: WHERE module IN ('AUTH', 'ORDER')
 -- Impact: Accelerates module distribution and service-specific queries
 CREATE INDEX IF NOT EXISTS idx_logs_module 
-  ON infra_module_logs (module) 
+  ON infra_module_log (module) 
   COMMENT 'Performance: Supports filtering by module/service';
 
--- Trace ID index: For distributed tracing and request correlation
+-- Event index: For distributed tracing and request correlation
 -- Usage: WHERE trace_id = 'xyz123' (useful for finding related logs)
 -- Impact: Enables efficient trace-based log retrieval
-CREATE INDEX IF NOT EXISTS idx_logs_trace_id 
-  ON infra_module_logs (trace_id) 
+CREATE INDEX IF NOT EXISTS idx_logs_event_id 
+  ON infra_module_log (event_id) 
   COMMENT 'Performance: Supports distributed tracing and correlation queries';
 
 -- Composite index: For common filtering patterns
 -- Usage: WHERE level = 'ERROR' AND timestamp >= startTime
 -- Impact: Enables index-only scans for common error analysis queries
 CREATE INDEX IF NOT EXISTS idx_logs_level_timestamp 
-  ON infra_module_logs (level, timestamp DESC) 
+  ON infra_module_log (level, timestamp DESC) 
   COMMENT 'Performance: Supports combined level and timestamp queries';
 
 -- ============================================================================
@@ -110,16 +110,16 @@ CREATE INDEX IF NOT EXISTS idx_logs_level_timestamp
 -- ============================================================================
 
 -- Show table structure:
--- DESCRIBE infra_module_logs;
+-- DESCRIBE infra_module_log;
 
 -- Show all indexes:
--- SHOW INDEXES FROM infra_module_logs;
+-- SHOW INDEXES FROM infra_module_log;
 
 -- Count current logs:
--- SELECT COUNT(*) FROM infra_module_logs;
+-- SELECT COUNT(*) FROM infra_module_log;
 
 -- Test a sample query:
 -- SELECT id, timestamp, module, level, message, trace_id 
--- FROM infra_module_logs 
+-- FROM infra_module_log 
 -- ORDER BY timestamp DESC 
 -- LIMIT 10;

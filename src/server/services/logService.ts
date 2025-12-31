@@ -228,7 +228,7 @@ class LogService {
       filtered = filtered.filter(
         log =>
           log.message.toLowerCase().includes(searchLower) ||
-          log.traceId.toLowerCase().includes(searchLower)
+          log.eventId.toLowerCase().includes(searchLower)
       );
     }
 

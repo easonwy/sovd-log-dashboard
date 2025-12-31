@@ -43,8 +43,8 @@ function matchesFilters(log: LogEntry, filters: LogFilters): boolean {
   if (filters.searchText && filters.searchText.trim()) {
     const s = filters.searchText.toLowerCase();
     const messageMatch = log.message.toLowerCase().includes(s);
-    const traceMatch = log.traceId.toLowerCase().includes(s);
-    if (!messageMatch && !traceMatch) return false;
+    const eventMatch = log.eventId.toLowerCase().includes(s);
+    if (!messageMatch && !eventMatch) return false;
   }
   return true;
 }

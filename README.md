@@ -55,7 +55,7 @@ node server.js
 ### Advanced Filtering ✅
 - Filter by log level (ERROR, WARNING, INFO, DEBUG)
 - Filter by module (AUTH, ORDER, PAYMENT, NOTIFICATION)
-- Full-text search in message and trace ID
+- Full-text search in message and Event
 - Independent filter state per client
 - 80-90% bandwidth savings via server-side filtering
 
