@@ -271,6 +271,16 @@ export function getInsertLogQuery(log: {
 }
 
 /**
+ * Get distinct log levels from logs
+ */
+export function getDistinctLevelsQuery(): { query: string; params: (string | number)[] } {
+  return {
+    query: 'SELECT DISTINCT level FROM infra_module_log WHERE level IS NOT NULL AND level != "" ORDER BY level ASC',
+    params: [],
+  };
+}
+
+/**
  * Get distinct modules from logs
  */
 export function getDistinctModulesQuery(): { query: string; params: (string | number)[] } {

@@ -1,12 +1,9 @@
-// src/components/dashboard/FilterSidebar.tsx
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useLogStore } from '@/store/logStore';
 import { useI18n } from '@/i18n/useI18n';
 import { getInitialFilters } from '@/utils/logUtils';
-import { LOG_LEVELS } from '@/constants/logConstants';
 import { Filter, ChevronDown, ChevronUp, Database } from 'lucide-react';
 import { LogEntry, LogFilters } from '@/types';
 
@@ -29,6 +26,9 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
   const [modules, setModules] = useState<string[]>([]);
   const [modulesLoading, setModulesLoading] = useState(true);
   const [modulesError, setModulesError] = useState<string | null>(null);
+  const [levels, setLevels] = useState<string[]>([]);
+  const [levelsLoading, setLevelsLoading] = useState(true);
+  const [levelsError, setLevelsError] = useState<string | null>(null);
 
   const filters = useLogStore(selectFilters);
   const setFilters = useLogStore(selectSetFilters);
@@ -37,30 +37,72 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
   const logs = useLogStore(selectLogs);
   
   // Fetch modules from API
+  // Fetch both modules and levels, then update filters with both checked by default
   useEffect(() => {
-    const fetchModules = async () => {
+    const fetchFiltersData = async () => {
       try {
-        setModulesLoading(true);
-        setModulesError(null);
-        const response = await fetch('/api/v1/modules');
-        const result = await response.json();
+        // Fetch both in parallel
+        const [modulesResponse, levelsResponse] = await Promise.all([
+          fetch('/api/v1/modules'),
+          fetch('/api/v1/levels'),
+        ]);
         
-        if (result.success && Array.isArray(result.data)) {
-          setModules(result.data);
+        const modulesResult = await modulesResponse.json();
+        const levelsResult = await levelsResponse.json();
+        
+        // Process modules
+        if (modulesResult.success && Array.isArray(modulesResult.data)) {
+          setModules(modulesResult.data);
         } else {
           setModulesError('Failed to load modules');
           setModules([]);
         }
+        
+        // Process levels
+        if (levelsResult.success && Array.isArray(levelsResult.data)) {
+          setLevels(levelsResult.data);
+        } else {
+          setLevelsError('Failed to load log levels');
+          setLevels([]);
+        }
+        
+        // Build maps for both
+        const modulesMap = (modulesResult.success && Array.isArray(modulesResult.data))
+          ? modulesResult.data.reduce((acc: Record<string, boolean>, module: string) => {
+              acc[module] = true;
+              return acc;
+            }, {} as Record<string, boolean>)
+          : {};
+        
+        const levelsMap = (levelsResult.success && Array.isArray(levelsResult.data))
+          ? levelsResult.data.reduce((acc: Record<string, boolean>, level: string) => {
+              acc[level] = true;
+              return acc;
+            }, {} as Record<string, boolean>)
+          : {};
+        
+        // Update filters once with both modules and levels checked
+        const updatedFilters: LogFilters = {
+          ...filters,
+          modules: modulesMap,
+          levels: levelsMap,
+        };
+        setFilters(updatedFilters);
+        
       } catch (error) {
-        console.error('Error fetching modules:', error);
+        console.error('Error fetching filter data:', error);
         setModulesError('Error loading modules');
-        setModules([]);
+        setLevelsError('Error loading log levels');
       } finally {
         setModulesLoading(false);
+        setLevelsLoading(false);
       }
     };
     
-    fetchModules();
+    setModulesLoading(true);
+    setLevelsLoading(true);
+    fetchFiltersData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Calculate counts based on currently visible logs in STREAM mode
@@ -170,6 +212,18 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
         {t('currentMode')}: {viewMode === 'STREAM' ? t('streamMode') : t('historyMode')}
       </div>
 
+      {levelsLoading ? (
+        <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="text-xs text-gray-600 dark:text-gray-400">{t('loading') || 'Loading...'}</div>
+        </div>
+      ) : levelsError ? (
+        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/50 p-3 shadow-sm border border-red-200 dark:border-red-700">
+          <div className="text-xs text-red-600 dark:text-red-300">{levelsError}</div>
+        </div>
+      ) : (
+        renderFilterGroup('logLevels', levels, 'levels')
+      )}
+
       {modulesLoading ? (
         <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="text-xs text-gray-600 dark:text-gray-400">{t('loading') || 'Loading...'}</div>
@@ -181,7 +235,6 @@ export const FilterSidebar = ({ onClose }: FilterSidebarProps) => {
       ) : (
         renderFilterGroup('modules', modules, 'modules')
       )}
-      {renderFilterGroup('logLevels', LOG_LEVELS, 'levels')}
       
       {/* Time Range Filter */}
       <div className="mb-4 rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-gray-100 dark:border-gray-700">

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Log Dashboard',
+  title: 'SOVD Log Viewer Dashboard',
   description: 'Real-time log streaming and analysis dashboard',
 };

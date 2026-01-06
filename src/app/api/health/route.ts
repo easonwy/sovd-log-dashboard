@@ -24,7 +24,6 @@ interface StreamHealth extends HealthComponent {
 interface HealthResponse {
   status: 'healthy' | 'degraded' | 'unhealthy'
   uptimeSeconds: number
-  mockMode: boolean
   components: {
     database: DatabaseHealth
     stream: StreamHealth
@@ -66,7 +65,6 @@ export async function GET() {
     const healthData: HealthResponse = {
       status: overallStatus,
       uptimeSeconds: Math.floor(process.uptime()),
-      mockMode: (process.env.MOCK_MODE === 'true') || (process.env.NEXT_PUBLIC_MOCK_MODE === 'true'),
       components: {
         database: dbHealth,
         stream: streamHealth

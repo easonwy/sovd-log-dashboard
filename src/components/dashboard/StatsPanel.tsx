@@ -5,7 +5,6 @@
 import { useMemo } from 'react';
 import { useI18n } from '@/i18n/useI18n';
 import { getColorClass } from '@/utils/colorUtils';
-import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import type { CalculatedStats, DistributionItem, LogEntry } from '@/types';
 import { BarChart3, TrendingUp, ChevronUp } from 'lucide-react';
 
@@ -27,12 +26,12 @@ export const StatsPanel = ({ filteredLogs, onClose }: StatsPanelProps) => {
       moduleCounts[log.module] = (moduleCounts[log.module] || 0) + 1;
     });
 
-    const calculateDistribution = (counts: Record<string, number>, keys: string[]): DistributionItem[] => {
-      return keys
-        .map(key => ({
+    const calculateDistribution = (counts: Record<string, number>): DistributionItem[] => {
+      return Object.entries(counts)
+        .map(([key, count]) => ({
           key,
-          count: counts[key] || 0,
-          percentage: totalCount > 0 ? ((counts[key] || 0) / totalCount) * 100 : 0,
+          count,
+          percentage: totalCount > 0 ? (count / totalCount) * 100 : 0,
           colorClass: getColorClass(key),
         }))
         .filter(item => item.count > 0);
@@ -40,8 +39,8 @@ export const StatsPanel = ({ filteredLogs, onClose }: StatsPanelProps) => {
 
     return {
       totalCount,
-      levelDistribution: calculateDistribution(levelCounts, LOG_LEVELS),
-      moduleDistribution: calculateDistribution(moduleCounts, LOG_MODULES),
+      levelDistribution: calculateDistribution(levelCounts),
+      moduleDistribution: calculateDistribution(moduleCounts),
     };
   }, [filteredLogs]);
 

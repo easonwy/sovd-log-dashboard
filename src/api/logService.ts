@@ -1,6 +1,4 @@
-import { LOG_LEVELS, LOG_MODULES } from '@/constants/logConstants';
 import { LogFilters, LogEntry } from '@/types';
-import { generateDemoLogs } from './mockData';
 
 export interface HistoryResponse {
   logs: LogEntry[];
@@ -22,35 +20,24 @@ const BACKEND_URL = typeof window !== 'undefined'
   ? process.env.NEXT_PUBLIC_BACKEND_URL || `${window.location.origin}`
   : process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
-// Unified mock mode flag (client-side)
-const FORCE_MOCK = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
-
-const getMockHistory = (offset: number, limit: number): HistoryResponse => {
-  console.warn('Serving MOCK data for historical logs.');
-  const allMockLogs = generateDemoLogs();
-  const paginatedLogs = allMockLogs.slice(offset, offset + limit);
-  return {
-    logs: paginatedLogs,
-    total: allMockLogs.length,
-  };
-};
-
 export const fetchHistoricalLogs = async (
   offset: number,
   limit: number,
   filters: LogFilters
 ): Promise<HistoryResponse> => {
-  if (FORCE_MOCK) {
-    return getMockHistory(offset, limit);
-  }
-
   const queryParams = new URLSearchParams();
 
-  // Build query parameters properly
-  const activeLevels = LOG_LEVELS.filter((l) => filters.levels[l]).join(',');
+  // Build query parameters for active filters
+  const activeLevels = Object.entries(filters.levels)
+    .filter(([, isActive]) => isActive)
+    .map(([level]) => level)
+    .join(',');
   if (activeLevels) queryParams.append('levels', activeLevels);
 
-  const activeModules = LOG_MODULES.filter((m) => filters.modules[m]).join(',');
+  const activeModules = Object.entries(filters.modules)
+    .filter(([, isActive]) => isActive)
+    .map(([module]) => module)
+    .join(',');
   if (activeModules) queryParams.append('modules', activeModules);
 
   if (filters.searchText) queryParams.append('search', filters.searchText);
@@ -85,7 +72,7 @@ export const fetchHistoricalLogs = async (
     console.log('[API] Returning:', { logsCount: result.logs.length, total: result.total });
     return result;
   } catch (error) {
-    console.error('Real API fetch failed, falling back to mock data.', error);
-    return getMockHistory(offset, limit);
+    console.error('Failed to fetch historical logs:', error);
+    throw error;
   }
 };
