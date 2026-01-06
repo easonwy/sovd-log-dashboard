@@ -36,8 +36,8 @@ export const DashboardPage = () => {
   useLogStream();
   
   // UI-specific state that doesn't need to be global.
-  const [isStatsVisible, setIsStatsVisible] = useState(true);
-  const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const [isStatsVisible, setIsStatsVisible] = useState(false);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
   // Hydrate filter visibility from localStorage on mount
   useEffect(() => {

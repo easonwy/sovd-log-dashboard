@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { LogEntry, LogFilters } from '@/types';
-import { getInitialFilters, generateDemoLogs } from '@/utils/logUtils';
+import { getInitialFilters } from '@/utils/logUtils';
 import { fetchHistoricalLogs } from '@/api/logService';
 import { PAGE_SIZE, MAX_LOG_COUNT } from '@/constants/logConstants';
 
@@ -43,7 +43,7 @@ export interface LogState {
  */
 export const useLogStore = create<LogState>((set, get) => ({
   // --- INITIAL STATE ---
-  logs: generateDemoLogs(), // Start with demo logs for an immediate UI.
+  logs: [], // Start with empty logs; will be populated by SSE stream or history
   filters: getInitialFilters(),
   viewMode: 'STREAM',
   isPaused: false,
@@ -89,26 +89,17 @@ export const useLogStore = create<LogState>((set, get) => ({
   }),
 
   setViewMode: (mode) => set((state) => {
-    // When switching to STREAM mode, restore demo logs if empty
+    // When switching to STREAM mode, clear logs and trigger reconnection for SSE
     // When switching to HISTORY mode, keep current logs (they'll be replaced by history)
-    if (mode === 'STREAM' && state.logs.length === 0) {
-      return {
-        viewMode: mode,
-        page: 1,
-        selectedLog: null,
-        filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
-        logs: generateDemoLogs(), // Restore demo logs for STREAM mode
-        totalLogsCount: 0,
-      };
-    }
-    
     return {
       viewMode: mode,
       page: 1,
       selectedLog: null,
       filters: getInitialFilters(), // Reset filters on mode change for a clean slate.
-      logs: mode === 'HISTORY' ? state.logs : generateDemoLogs(), // Keep logs in HISTORY, restore demo in STREAM
+      logs: mode === 'HISTORY' ? state.logs : [], // Clear logs in STREAM mode; SSE will repopulate
       totalLogsCount: 0,
+      isConnected: mode === 'STREAM' ? false : state.isConnected, // Reset connection status when switching to STREAM
+      connectionError: mode === 'STREAM' ? null : state.connectionError, // Clear connection error when switching to STREAM
     };
   }),
 
